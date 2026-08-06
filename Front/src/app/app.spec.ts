@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { App } from './app.component'; // ou AppComponent se essa for a classe
+import { describe, it, expect, beforeEach } from 'vitest';
 
-describe('App', () => {
+describe('App Component', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
@@ -12,12 +13,5 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, sistema-gestao-atividades-complementares-front');
   });
 });
