@@ -15,12 +15,18 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.ConstraintViolationException;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -58,9 +64,26 @@ class AtividadeComplementarServiceTest {
     @Mock
     private ArmazenamentoCertificadoService armazenamentoCertificadoService;
 
-    @InjectMocks
-    private AtividadeComplementarService service;
+    private static ValidatorFactory validatorFactory;
+        private Validator validator;
+        private AtividadeComplementarService service;
 
+        @BeforeAll
+        static void configurarValidatorFactory() {
+        validatorFactory = Validation.buildDefaultValidatorFactory();
+        }
+
+        @AfterAll
+        static void fecharValidatorFactory() {
+        validatorFactory.close();
+        }
+
+        @BeforeEach
+        void configurarService() {
+        validator = validatorFactory.getValidator();
+        service = new AtividadeComplementarService(
+                atividadeRepository, usuarioContrato, armazenamentoCertificadoService, validator);
+        }
     private AtividadeComplementar criarAtividade(Natureza natureza, Categoria categoria, Estudante estudante) {
         return new AtividadeComplementar(
                 "Atividade de teste",
@@ -371,4 +394,86 @@ class AtividadeComplementarServiceTest {
         verify(usuarioContrato, never()).buscarPorEmail(any());
         verify(atividadeRepository, never()).save(any());
     }
+
+    @Test
+        @DisplayName("Edicao do proprio registro atualiza os campos e persiste as mudancas")
+        void edicaoDoProprioRegistroAtualizaCampos() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        AtividadeComplementar atividadeExistente = criarAtividade(Natureza.ACC, Categoria.PESQUISA, estudante);
+        CadastroAtividadeRequest novosDados = new CadastroAtividadeRequest(
+                "Titulo atualizado", "Instituicao atualizada", LocalDate.now(), 20,
+                Natureza.ACEX, Categoria.EXTENSAO);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante))
+                .thenReturn(Optional.of(atividadeExistente));
+        when(atividadeRepository.save(atividadeExistente)).thenReturn(atividadeExistente);
+
+        AtividadeResponse resposta = service.atualizarAtividade(ID_ATIVIDADE, novosDados, EMAIL);
+
+        assertEquals("Titulo atualizado", atividadeExistente.getTitulo());
+        assertEquals(Natureza.ACEX, atividadeExistente.getNatureza());
+        assertEquals("Titulo atualizado", resposta.titulo());
+        verify(atividadeRepository).save(atividadeExistente);
+        }
+
+        @Test
+        @DisplayName("Edicao de atividade que nao pertence ao estudante lanca acesso negado")
+        void edicaoDeAtividadeDeOutroEstudanteLancaAcessoNegado() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        CadastroAtividadeRequest novosDados = new CadastroAtividadeRequest(
+                "Titulo atualizado", "Instituicao atualizada", LocalDate.now(), 20,
+                Natureza.ACEX, Categoria.EXTENSAO);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante)).thenReturn(Optional.empty());
+
+        assertThrows(AcessoNegadoAtividadeException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, novosDados, EMAIL));
+        verify(atividadeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Edicao com id inexistente lanca erro apropriado")
+        void edicaoComIdInexistenteLancaErroApropriado() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        Long idInexistente = 9999L;
+        CadastroAtividadeRequest novosDados = new CadastroAtividadeRequest(
+                "Titulo atualizado", "Instituicao atualizada", LocalDate.now(), 20,
+                Natureza.ACEX, Categoria.EXTENSAO);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findByIdAndEstudante(idInexistente, estudante)).thenReturn(Optional.empty());
+
+        assertThrows(AcessoNegadoAtividadeException.class,
+                () -> service.atualizarAtividade(idInexistente, novosDados, EMAIL));
+        verify(atividadeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Edicao com dados invalidos e rejeitada sem persistir")
+        void edicaoComDadosInvalidosERejeitadaSemPersistir() {
+        CadastroAtividadeRequest dadosInvalidos = new CadastroAtividadeRequest(
+                "", "Instituicao", LocalDate.now().plusDays(1), -5,
+                Natureza.ACC, Categoria.PESQUISA);
+
+        assertThrows(ConstraintViolationException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, dadosInvalidos, EMAIL));
+        verify(usuarioContrato, never()).buscarPorEmail(any());
+        verify(atividadeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Edicao com estudante inexistente lanca acesso negado")
+        void edicaoComEstudanteInexistenteLancaAcessoNegado() {
+        CadastroAtividadeRequest novosDados = new CadastroAtividadeRequest(
+                "Titulo atualizado", "Instituicao atualizada", LocalDate.now(), 20,
+                Natureza.ACEX, Categoria.EXTENSAO);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.empty());
+
+        assertThrows(AcessoNegadoAtividadeException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, novosDados, EMAIL));
+        verify(atividadeRepository, never()).save(any());
+        }
 }

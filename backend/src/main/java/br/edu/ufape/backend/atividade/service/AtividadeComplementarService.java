@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,15 @@ import br.edu.ufape.backend.certificados.service.ArmazenamentoCertificadoService
 import br.edu.ufape.backend.usuario.contrato.UsuarioContrato;
 import br.edu.ufape.backend.usuario.model.Estudante;
 import br.edu.ufape.backend.usuario.model.Usuario;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 
 @Service
 public class AtividadeComplementarService {
 
     private static final String MENSAGEM_ACESSO_NEGADO = "Apenas estudantes podem listar atividades complementares.";
+    private final Validator validator;
 
     /*
      * Mesma mensagem/exceção usada tanto para "atividade não existe" quanto para
@@ -35,7 +40,7 @@ public class AtividadeComplementarService {
      * casos permitiria a um usuário mal-intencionado descobrir quais IDs existem
      * no banco só testando exclusões (enumeração de recursos).
      */
-    private static final String MENSAGEM_ACESSO_NEGADO_EXCLUSAO =
+    private static final String MENSAGEM_ACESSO_NEGADO_ATIVIDADE =
             "Atividade não encontrada ou não pertence ao estudante autenticado.";
 
     private final AtividadeComplementarRepository atividadeRepository;
@@ -45,10 +50,12 @@ public class AtividadeComplementarService {
     public AtividadeComplementarService(
             AtividadeComplementarRepository atividadeRepository,
             UsuarioContrato usuarioContrato,
-            ArmazenamentoCertificadoService armazenamentoCertificadoService) {
+            ArmazenamentoCertificadoService armazenamentoCertificadoService,
+            Validator validator) {
         this.atividadeRepository = atividadeRepository;
         this.usuarioContrato = usuarioContrato;
         this.armazenamentoCertificadoService = armazenamentoCertificadoService;
+        this.validator = validator;
     }
 
     public List<AtividadeComplementar> listarAtividadesDoEstudante(
@@ -96,11 +103,38 @@ public class AtividadeComplementarService {
         Estudante estudante = obterEstudante(emailEstudante);
 
         AtividadeComplementar atividade = atividadeRepository.findByIdAndEstudante(id, estudante)
-                .orElseThrow(() -> new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_EXCLUSAO));
+                .orElseThrow(() -> new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_ATIVIDADE));
 
         removerArquivoCertificado(atividade.getCertificado());
 
         atividadeRepository.delete(atividade);
+    }
+
+    @Transactional
+    public AtividadeResponse atualizarAtividade(Long id, CadastroAtividadeRequest request, String emailEstudante) {
+        validarDados(request);
+
+        Estudante estudante = obterEstudante(emailEstudante);
+
+        AtividadeComplementar atividade = atividadeRepository.findByIdAndEstudante(id, estudante)
+                .orElseThrow(() -> new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_ATIVIDADE));
+
+        atividade.setTitulo(request.titulo());
+        atividade.setInstituicaoResponsavel(request.instituicaoResponsavel());
+        atividade.setDataRealizacao(request.dataRealizacao());
+        atividade.setCargaHorariaEmHoras(request.cargaHoraria());
+        atividade.setNatureza(request.natureza());
+        atividade.setCategoria(request.categoria());
+
+        AtividadeComplementar atividadeAtualizada = atividadeRepository.save(atividade);
+        return new AtividadeResponse(atividadeAtualizada);
+    }
+
+    private void validarDados(CadastroAtividadeRequest request) {
+        Set<ConstraintViolation<CadastroAtividadeRequest>> violacoes = validator.validate(request);
+        if (!violacoes.isEmpty()) {
+            throw new ConstraintViolationException(violacoes);
+        }
     }
 
     private void removerArquivoCertificado(Certificado certificado) {
