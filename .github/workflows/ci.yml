@@ -2,10 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
-
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -40,7 +39,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar
 
-      - name: Build e testes
+      - name: Build e testes (Maven com JaCoCo)
         run: ./mvnw clean test -Dspring.profiles.active=test jacoco:report
 
       - name: Publicar relatório de cobertura JaCoCo
@@ -57,12 +56,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >
-          ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          ./mvnw sonar:sonar
           -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
           -Dsonar.organization=gestaoatividadecomplementarorg
           -Dsonar.projectKey=GestaoAtividadeComplementarOrg_GestaoAtividadesComplementares
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml || true
+          -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
 
   frontend:
     name: Frontend - Build e Testes
