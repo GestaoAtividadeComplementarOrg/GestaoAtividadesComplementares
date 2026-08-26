@@ -1,17 +1,36 @@
 [![CI](https://github.com/GestaoAtividadeComplementarOrg/GestaoAtividadesComplementares/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/GestaoAtividadeComplementarOrg/GestaoAtividadesComplementares/actions/workflows/ci.yml)
 [![DEPLOY](https://github.com/GestaoAtividadeComplementarOrg/GestaoAtividadesComplementares/actions/workflows/deploy.yml/badge.svg)](https://github.com/GestaoAtividadeComplementarOrg/GestaoAtividadesComplementares/actions/workflows/deploy.yml)
 
-[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=arayumi3_GestaoAtividadesComplementares&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=arayumi3_GestaoAtividadesComplementares)
-
-[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=arayumi3_GestaoAtividadesComplementares)
-
 
 ## Deploy em Produção (Render)
 
 - **Frontend (SPA):** [https://sgac-frontend.onrender.com](https://gestaoatividadescomplementares.onrender.com)
 - **Backend (API REST):** [https://sgac-backend-3rub.onrender.com](https://gestaoatividadescomplementares-backend.onrender.com)
-- **SonarCloud:** [https://sonarcloud.io/project/overview?id=arayumi3_GestaoAtividadesComplementares](https://sonarcloud.io/project/overview?id=arayumi3_GestaoAtividadesComplementares)
-- **Banco de Dados:** PostgreSQL (Render)
+
+### SonarCloud Backend
+- **SonarCloud - Backend:** [https://sonarcloud.io/project/overview?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg](https://sonarcloud.io/project/overview?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=coverage)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=bugs)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+[![software_quality_security_issues](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=software_quality_security_issues)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg)
+
+
+
+### SonarCloud Frontend
+- **SonarCloud - Frontend:** [https://sonarcloud.io/project/overview?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend](https://sonarcloud.io/project/overview?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=coverage&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=bugs&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=code_smells&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=duplicated_lines_density&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+[![software_quality_security_issues](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=software_quality_security_issues&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend&metric=vulnerabilities&token=bfbab122920e18af2a4951347fd8fe849e20783c)](https://sonarcloud.io/summary/new_code?id=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend)
+
+### BD
+- **Banco de Dados:** PostgreSQL (Render) -> Migração Futura para o Supabase Postgre
 
 ### SENHA DE ACESSO PADRÃO
 - **LOGIN:** test@test.test
@@ -110,7 +129,7 @@ O frontend inicia em: `http://localhost:4200`
 ### 3) Validar testes e build
 
 ```bash
-cd backend && ./mvnw test
+cd backend && ./mvnw test -Dspring.profiles.active=test
 cd ../Front && npm ci && npm test && npm run build
 ```
 
@@ -118,19 +137,44 @@ cd ../Front && npm ci && npm test && npm run build
 
 ## 🔐 Variáveis de ambiente
 
-O backend usa algumas variáveis de ambiente para configuração local e de produção:
+O backend carrega um arquivo `.env` a partir do diretório de execução (`backend/`).
+Use `backend/.env.example` como ponto de partida:
 
-- **`JWT_SECRET`**: segredo usado para assinar os tokens JWT.
-  Valor padrão em desenvolvimento: `SenhaDeTeste==123==EssaSenhaSoServeParaTestes`
-- **`DB_PASSWORD`**: senha do PostgreSQL quando o perfil `prod` está ativo.
+```bash
+cd backend
+cp .env.example .env
+```
+
+Observação: a carga do `.env` acontece no `main()` da aplicação. Para executar os testes com Spring Boot via Maven, use o perfil `test` (ex.: `./mvnw test -Dspring.profiles.active=test`) ou exporte `JWT_SECRET` no ambiente.
+
+### Obrigatória
+
+- **`JWT_SECRET`**: segredo usado para assinar os tokens JWT (HS256). **Não possui valor padrão**:
+  fora do perfil de testes, a aplicação não inicia sem ele. Precisa ser Base64 válido e ter no
+  mínimo 256 bits. Gere o seu com `openssl rand -base64 32` e nunca versione o valor.
+
+### Perfil `prod`
+
+- **`SPRING_DATASOURCE_URL`**, **`SPRING_DATASOURCE_USERNAME`**, **`SPRING_DATASOURCE_PASSWORD`**:
+  dados de conexão com o PostgreSQL.
+- **`CORS_ALLOWED_ORIGINS`**: origens exatas permitidas no CORS, separadas por vírgula
+  (ex.: `https://gestaoatividadescomplementares.onrender.com`). Curingas não são aceitos porque a
+  API responde com credenciais. No perfil `dev` o valor padrão é `http://localhost:4200`, definido
+  em `application.properties`.
+- **`JWT_EXPIRATION`**: validade do token em milissegundos (padrão: `86400000`).
+- **`PORT`**: porta HTTP da aplicação (padrão: `8080`).
+
+### Opcionais
+
+- **`GROQ_API_KEY`** e **`HUGGINGFACE_API_KEY`**: integrações de IA.
 - **`SPRING_PROFILES_ACTIVE`**: controla o perfil ativo do Spring.
-  - `dev` → usa H2 em memória
+  - `dev` → usa H2 em memória (padrão)
   - `prod` → usa PostgreSQL
 
 Exemplo de uso em desenvolvimento:
 
 ```bash
-export JWT_SECRET="SenhaDeTeste==123==EssaSenhaSoServeParaTestes"
+export JWT_SECRET="$(openssl rand -base64 32)"
 ```
 
 ---
@@ -147,7 +191,8 @@ O projeto está configurado para dois cenários:
 **Produção: PostgreSQL**
 - Arquivo de configuração: `application-prod.properties`
 - URL: `jdbc:postgresql://localhost:5432/gestao_atividades_complementares`
-- Requer a variável `DB_PASSWORD` configurada
+- Requer as variáveis `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e
+  `SPRING_DATASOURCE_PASSWORD` configuradas
 
 O arquivo `application.properties` usa o perfil `dev` por padrão, então a execução local padrão do projeto continua em H2.
 

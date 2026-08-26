@@ -1,14 +1,24 @@
 package br.edu.ufape.backend.solicitacao.repository;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import br.edu.ufape.backend.solicitacao.model.SolicitacaoValidacao;
 import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Collection;
 
 public interface SolicitacaoValidacaoRepository extends JpaRepository<SolicitacaoValidacao, Long> {
 
-    boolean existsByItens_AtividadeIdAndStatusIn(Long atividadeId, Collection<StatusSolicitacao> statuses);
+    boolean existsByEstudanteIdAndStatusIn(Long estudanteId, Collection<StatusSolicitacao> statusList);
 
-    boolean existsByEstudanteIdAndStatusIn(Long estudanteId, Collection<StatusSolicitacao> statuses);
+    @Query("SELECT COUNT(s) > 0 FROM SolicitacaoValidacao s JOIN s.itens item " +
+           "WHERE item.atividadeId = :atividadeId AND s.status IN :statusList")
+    boolean existsByAtividadeIdAndStatusIn(
+            @Param("atividadeId") Long atividadeId,
+            @Param("statusList") Collection<StatusSolicitacao> statusList);
+
+    List<SolicitacaoValidacao> findByEstudanteId(Long estudanteId);
 }

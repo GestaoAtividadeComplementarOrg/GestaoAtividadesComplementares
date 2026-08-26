@@ -1,6 +1,11 @@
 package br.edu.ufape.backend.solicitacao.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "solicitacao_atividades")
@@ -10,14 +15,10 @@ public class SolicitacaoAtividade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "solicitacao_id", nullable = false)
-    private SolicitacaoValidacao solicitacao;
-
     @Column(name = "atividade_id", nullable = false)
     private Long atividadeId;
 
-    @Column(nullable = false)
+    @Column(name = "titulo", nullable = false)
     private String titulo;
 
     @Column(name = "carga_horaria", nullable = false)
@@ -25,14 +26,13 @@ public class SolicitacaoAtividade {
 
     // Armazenado como String (snapshot): desacoplado do enum Natureza para garantir imutabilidade historica.
     // Mudancas futuras no enum nao afetam registros ja submetidos.
-    @Column(nullable = false)
+    @Column(name = "natureza", nullable = false)
     private String natureza;
 
-    public SolicitacaoAtividade() {}
+    public SolicitacaoAtividade() {
+    }
 
-    public SolicitacaoAtividade(SolicitacaoValidacao solicitacao, Long atividadeId,
-                                 String titulo, Integer cargaHoraria, String natureza) {
-        this.solicitacao = solicitacao;
+    public SolicitacaoAtividade(Long atividadeId, String titulo, Integer cargaHoraria, String natureza) {
         this.atividadeId = atividadeId;
         this.titulo = titulo;
         this.cargaHoraria = cargaHoraria;
@@ -41,9 +41,6 @@ public class SolicitacaoAtividade {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
-    public SolicitacaoValidacao getSolicitacao() { return solicitacao; }
-    public void setSolicitacao(SolicitacaoValidacao solicitacao) { this.solicitacao = solicitacao; }
 
     public Long getAtividadeId() { return atividadeId; }
     public void setAtividadeId(Long atividadeId) { this.atividadeId = atividadeId; }

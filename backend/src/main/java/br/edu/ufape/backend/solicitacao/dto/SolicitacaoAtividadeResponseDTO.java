@@ -6,9 +6,14 @@ public record SolicitacaoAtividadeResponseDTO(
         Long atividadeId,
         String titulo,
         Integer cargaHoraria,
-        String natureza) {
-
+        String natureza
+) {
     public SolicitacaoAtividadeResponseDTO(SolicitacaoAtividade item) {
-        this(item.getAtividadeId(), item.getTitulo(), item.getCargaHoraria(), item.getNatureza());
+        this(
+                item.getAtividadeId(),
+                item.getTitulo(),
+                item.getCargaHoraria(),
+                item.getNatureza()
+        );
     }
 }

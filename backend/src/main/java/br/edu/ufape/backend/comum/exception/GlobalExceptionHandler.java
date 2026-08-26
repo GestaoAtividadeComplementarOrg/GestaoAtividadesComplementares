@@ -20,6 +20,8 @@ import br.edu.ufape.backend.autenticacao.exception.EmailJaCadastradoException;
 import br.edu.ufape.backend.autenticacao.exception.PerfilNaoPermitidoException;
 import br.edu.ufape.backend.autenticacao.exception.UnauthorizedException;
 import br.edu.ufape.backend.certificados.exception.CertificadoInvalidoException;
+import br.edu.ufape.backend.solicitacao.exception.EstudanteSemAtividadesException;
+import br.edu.ufape.backend.solicitacao.exception.SolicitacaoEmAbertoException;
 import br.edu.ufape.backend.solicitacao.exception.SolicitacaoNaoEncontradaException;
 import br.edu.ufape.backend.solicitacao.exception.TransicaoEstadoInvalidaException;
 
@@ -40,14 +42,14 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .filter(Objects::nonNull)
                 .findFirst()
-                .orElse("Erro de validação nos campos da requisição.");
+                .orElse("Erro de validacao nos campos da requisicao.");
         ErroResponse erro = new ErroResponse(mensagem, HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<ErroResponse> tratarArquivoAusente(MissingServletRequestPartException ex) {
-        ErroResponse erro = new ErroResponse("Arquivo de certificado não pode ser vazio", HttpStatus.BAD_REQUEST.value());
+        ErroResponse erro = new ErroResponse("Arquivo de certificado nao pode ser vazio", HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
@@ -60,14 +62,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(Exception ex) {
         String msg = (ex.getMessage() != null && !ex.getMessage().isBlank())
                 ? ex.getMessage()
-                : "Parâmetros da requisição inválidos ou ausentes.";
+                : "Parametros da requisicao invalidos ou ausentes.";
         ErroResponse erro = new ErroResponse(msg, HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErroResponse> tratarRecursoNaoEncontrado(NoResourceFoundException ex) {
-        ErroResponse erro = new ErroResponse("Recurso não encontrado.", HttpStatus.NOT_FOUND.value());
+        ErroResponse erro = new ErroResponse("Recurso nao encontrado.", HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
@@ -101,10 +103,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
     }
 
+    @ExceptionHandler(SolicitacaoEmAbertoException.class)
+    public ResponseEntity<ErroResponse> tratarSolicitacaoEmAberto(SolicitacaoEmAbertoException ex) {
+        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
+    }
+
     @ExceptionHandler(TransicaoEstadoInvalidaException.class)
     public ResponseEntity<ErroResponse> tratarTransicaoEstadoInvalida(TransicaoEstadoInvalidaException ex) {
         ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.CONFLICT.value());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
+    }
+
+    @ExceptionHandler(EstudanteSemAtividadesException.class)
+    public ResponseEntity<ErroResponse> tratarEstudanteSemAtividades(EstudanteSemAtividadesException ex) {
+        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(erro);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -115,7 +129,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarCatchAll(Exception ex) {
-        log.error("Erro interno não tratado no servidor", ex);
+        log.error("Erro interno nao tratado no servidor", ex);
         ErroResponse erro = new ErroResponse(
                 "Ocorreu um erro interno inesperado no servidor.",
                 HttpStatus.INTERNAL_SERVER_ERROR.value()

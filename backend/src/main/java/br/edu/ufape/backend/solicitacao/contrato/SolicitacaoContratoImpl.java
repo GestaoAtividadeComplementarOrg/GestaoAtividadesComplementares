@@ -1,7 +1,8 @@
 package br.edu.ufape.backend.solicitacao.contrato;
 
-import br.edu.ufape.backend.solicitacao.service.SolicitacaoService;
 import org.springframework.stereotype.Component;
+
+import br.edu.ufape.backend.solicitacao.service.SolicitacaoService;
 
 @Component
 public class SolicitacaoContratoImpl implements SolicitacaoContrato {

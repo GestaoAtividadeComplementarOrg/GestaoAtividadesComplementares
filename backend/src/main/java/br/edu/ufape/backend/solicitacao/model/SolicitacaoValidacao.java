@@ -1,11 +1,22 @@
 package br.edu.ufape.backend.solicitacao.model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "solicitacoes_validacao")
@@ -22,15 +33,14 @@ public class SolicitacaoValidacao {
     @Column(name = "estudante_id", nullable = false)
     private Long estudanteId;
 
-    @CreationTimestamp
-    @Column(name = "data_submissao", nullable = false, updatable = false)
+    @Column(name = "data_submissao", nullable = false)
     private LocalDateTime dataSubmissao;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private StatusSolicitacao status = StatusSolicitacao.SUBMETIDA;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "justificativa")
     private String justificativa;
 
     @Column(name = "avaliador_id")
@@ -39,11 +49,23 @@ public class SolicitacaoValidacao {
     @Column(name = "data_avaliacao")
     private LocalDateTime dataAvaliacao;
 
-    @OneToMany(mappedBy = "solicitacao", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "solicitacao_id", nullable = false)
     private List<SolicitacaoAtividade> itens = new ArrayList<>();
 
-    public SolicitacaoValidacao() {}
+    public SolicitacaoValidacao() {
+    }
 
+    /** Construtor completo — usado pela camada de servico ao submeter. */
+    public SolicitacaoValidacao(Long estudanteId, LocalDateTime dataSubmissao,
+                                StatusSolicitacao status, List<SolicitacaoAtividade> itens) {
+        this.estudanteId = estudanteId;
+        this.dataSubmissao = dataSubmissao;
+        this.status = status != null ? status : StatusSolicitacao.SUBMETIDA;
+        this.itens = itens != null ? new ArrayList<>(itens) : new ArrayList<>();
+    }
+
+    /** Construtor simplificado — usado em testes e cenarios sem itens. */
     public SolicitacaoValidacao(Long estudanteId) {
         this.estudanteId = estudanteId;
     }
@@ -73,5 +95,7 @@ public class SolicitacaoValidacao {
     public void setDataAvaliacao(LocalDateTime dataAvaliacao) { this.dataAvaliacao = dataAvaliacao; }
 
     public List<SolicitacaoAtividade> getItens() { return itens; }
-    public void setItens(List<SolicitacaoAtividade> itens) { this.itens = itens; }
+    public void setItens(List<SolicitacaoAtividade> itens) {
+        this.itens = itens != null ? new ArrayList<>(itens) : new ArrayList<>();
+    }
 }
