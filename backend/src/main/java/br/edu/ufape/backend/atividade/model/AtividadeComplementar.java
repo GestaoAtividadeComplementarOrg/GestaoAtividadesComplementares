@@ -2,9 +2,7 @@ package br.edu.ufape.backend.atividade.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 import org.hibernate.annotations.CreationTimestamp;
-
 import br.edu.ufape.backend.certificados.model.Certificado;
 import br.edu.ufape.backend.usuario.model.Usuario;
 import jakarta.persistence.Column;
@@ -48,6 +46,10 @@ public class AtividadeComplementar {
     @Column(name = "categoria", nullable = false)
     private Categoria categoria;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StatusAtividade status = StatusAtividade.PENDENTE;
+
     @CreationTimestamp
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDateTime dataCadastro;
@@ -71,12 +73,17 @@ public class AtividadeComplementar {
         this.cargaHorariaEmHoras = cargaHorariaEmHoras;
         this.natureza = natureza;
         this.categoria = categoria;
+        this.status = StatusAtividade.PENDENTE;
         this.certificado = certificado;
         this.estudante = estudante;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitulo() {
@@ -125,6 +132,14 @@ public class AtividadeComplementar {
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public StatusAtividade getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusAtividade status) {
+        this.status = status;
     }
 
     public LocalDateTime getDataCadastro() {

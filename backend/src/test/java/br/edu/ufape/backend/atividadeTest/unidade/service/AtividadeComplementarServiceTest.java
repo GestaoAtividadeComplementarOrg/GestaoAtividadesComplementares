@@ -2,6 +2,7 @@ package br.edu.ufape.backend.atividadeTest.unidade.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,14 +26,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
-import br.edu.ufape.backend.atividade.dto.AtividadeResponse;
-import br.edu.ufape.backend.atividade.dto.CadastroAtividadeRequest;
+import br.edu.ufape.backend.atividade.dto.AtividadeResponseDTO;
+import br.edu.ufape.backend.atividade.dto.AtualizarAtividadeRequestDTO;
+import br.edu.ufape.backend.atividade.dto.CadastroAtividadeRequestDTO;
 import br.edu.ufape.backend.atividade.exception.AcessoNegadoAtividadeException;
+import br.edu.ufape.backend.atividade.exception.AtividadeNaoEncontradaException;
 import br.edu.ufape.backend.atividade.model.AtividadeComplementar;
 import br.edu.ufape.backend.atividade.model.Categoria;
 import br.edu.ufape.backend.atividade.model.Natureza;
 import br.edu.ufape.backend.atividade.repository.AtividadeComplementarRepository;
+import br.edu.ufape.backend.atividade.repository.ParecerConformidadeRepository;
 import br.edu.ufape.backend.atividade.service.AtividadeComplementarService;
+import br.edu.ufape.backend.atividade.service.AuditoriaConformidadeService;
 import br.edu.ufape.backend.certificados.exception.CertificadoInvalidoException;
 import br.edu.ufape.backend.certificados.model.Certificado;
 import br.edu.ufape.backend.certificados.service.ArmazenamentoCertificadoService;
@@ -57,6 +62,12 @@ class AtividadeComplementarServiceTest {
 
     @Mock
     private ArmazenamentoCertificadoService armazenamentoCertificadoService;
+
+    @Mock
+    private AuditoriaConformidadeService auditoriaConformidadeService;
+
+    @Mock
+    private ParecerConformidadeRepository parecerConformidadeRepository;
 
     @InjectMocks
     private AtividadeComplementarService service;
@@ -177,10 +188,12 @@ class AtividadeComplementarServiceTest {
         Path arquivoCertificado = tempDir.resolve("certificado.pdf");
         Files.createFile(arquivoCertificado);
 
-        AtividadeComplementar atividade = criarAtividadeComCertificado(estudante, arquivoCertificado.toString());
+        AtividadeComplementar atividade = criarAtividadeComCertificado(estudante,
+                arquivoCertificado.toString());
 
         when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
-        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante)).thenReturn(Optional.of(atividade));
+        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante))
+                .thenReturn(Optional.of(atividade));
 
         service.excluirAtividade(ID_ATIVIDADE, EMAIL);
 
@@ -198,15 +211,13 @@ class AtividadeComplementarServiceTest {
         assertThrows(
                 AcessoNegadoAtividadeException.class,
                 () -> service.excluirAtividade(ID_ATIVIDADE, EMAIL));
+
         verify(atividadeRepository, never()).delete(any());
     }
 
     @Test
     @DisplayName("Exclusao com id inexistente lanca erro apropriado")
     void exclusaoComIdInexistenteLancaErroApropriado() {
-        // mesmo cenario de "nao encontrado" que "pertence a outro estudante":
-        // findByIdAndEstudante nao distingue os dois casos de proposito (evita
-        // enumeracao de recursos). Ver comentario em AtividadeComplementarService.
         Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
         Long idInexistente = 9999L;
         when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
@@ -215,15 +226,13 @@ class AtividadeComplementarServiceTest {
         assertThrows(
                 AcessoNegadoAtividadeException.class,
                 () -> service.excluirAtividade(idInexistente, EMAIL));
+
         verify(atividadeRepository, never()).delete(any());
     }
 
     @Test
     @DisplayName("Falha ao remover arquivo do certificado nao deixa o banco inconsistente")
     void falhaAoRemoverArquivoNaoDeixaBancoInconsistente() throws IOException {
-        // Files.deleteIfExists lanca DirectoryNotEmptyException (subtipo de
-        // IOException) ao tentar apagar um diretorio nao vazio, simulando uma
-        // falha real de remocao sem depender de permissoes de SO.
         Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
         Path diretorioNaoVazio = tempDir.resolve("certificados-com-falha");
         Files.createDirectory(diretorioNaoVazio);
@@ -232,11 +241,13 @@ class AtividadeComplementarServiceTest {
         AtividadeComplementar atividade = criarAtividadeComCertificado(estudante, diretorioNaoVazio.toString());
 
         when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
-        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante)).thenReturn(Optional.of(atividade));
+        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante))
+                .thenReturn(Optional.of(atividade));
 
         assertThrows(
                 RuntimeException.class,
                 () -> service.excluirAtividade(ID_ATIVIDADE, EMAIL));
+
         verify(atividadeRepository, never()).delete(any());
         assertFalse(Files.notExists(diretorioNaoVazio), "O diretorio nao deveria ter sido removido");
     }
@@ -247,12 +258,13 @@ class AtividadeComplementarServiceTest {
         Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
         Path arquivoCertificado = tempDir.resolve("certificado.pdf");
         Files.createFile(arquivoCertificado);
+
         Certificado certificado = new Certificado(
                 "certificado.pdf", "application/pdf", 100L, arquivoCertificado.toString());
-
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "certificado.pdf", "application/pdf", "conteudo".getBytes());
-        CadastroAtividadeRequest request = new CadastroAtividadeRequest(
+
+        CadastroAtividadeRequestDTO request = new CadastroAtividadeRequestDTO(
                 "Atividade de teste",
                 "Instituicao",
                 LocalDate.now(),
@@ -277,16 +289,19 @@ class AtividadeComplementarServiceTest {
     @DisplayName("Cadastro de atividade com dados validos retorna atividade salva (caminho feliz)")
     void cadastroDeAtividadeComDadosValidosRetornaAtividadeSalva() {
         Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
-        Certificado certificado = new Certificado("certificado.pdf", "application/pdf", 100L, "/tmp/certificado.pdf");
+        Certificado certificado = new Certificado("certificado.pdf", "application/pdf", 100L,
+                "/tmp/certificado.pdf");
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "certificado.pdf", "application/pdf", "conteudo".getBytes());
-        CadastroAtividadeRequest request = new CadastroAtividadeRequest(
+
+        CadastroAtividadeRequestDTO request = new CadastroAtividadeRequestDTO(
                 "Atividade de teste",
                 "Instituicao",
                 LocalDate.now(),
                 10,
                 Natureza.ACC,
                 Categoria.PESQUISA);
+
         AtividadeComplementar atividadeSalva = new AtividadeComplementar(
                 request.titulo(),
                 request.instituicaoResponsavel(),
@@ -301,7 +316,7 @@ class AtividadeComplementarServiceTest {
         when(armazenamentoCertificadoService.armazenar(arquivo)).thenReturn(certificado);
         when(atividadeRepository.save(any())).thenReturn(atividadeSalva);
 
-        AtividadeResponse resposta = service.cadastrarAtividade(request, arquivo, EMAIL);
+        AtividadeResponseDTO resposta = service.cadastrarAtividade(request, arquivo, EMAIL);
 
         assertEquals(request.titulo(), resposta.titulo());
         assertEquals(request.natureza(), resposta.natureza());
@@ -315,7 +330,8 @@ class AtividadeComplementarServiceTest {
     void cadastroComEstudanteInexistenteLancaRuntimeException() {
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "certificado.pdf", "application/pdf", "conteudo".getBytes());
-        CadastroAtividadeRequest request = new CadastroAtividadeRequest(
+
+        CadastroAtividadeRequestDTO request = new CadastroAtividadeRequestDTO(
                 "Atividade de teste",
                 "Instituicao",
                 LocalDate.now(),
@@ -328,6 +344,7 @@ class AtividadeComplementarServiceTest {
         assertThrows(
                 RuntimeException.class,
                 () -> service.cadastrarAtividade(request, arquivo, EMAIL));
+
         verify(armazenamentoCertificadoService, never()).armazenar(any());
         verify(atividadeRepository, never()).save(any());
     }
@@ -337,7 +354,8 @@ class AtividadeComplementarServiceTest {
     void cadastroComArquivoVazioLancaCertificadoInvalidoException() {
         MockMultipartFile arquivoVazio = new MockMultipartFile(
                 "arquivo", "certificado.pdf", "application/pdf", new byte[0]);
-        CadastroAtividadeRequest request = new CadastroAtividadeRequest(
+
+        CadastroAtividadeRequestDTO request = new CadastroAtividadeRequestDTO(
                 "Atividade de teste",
                 "Instituicao",
                 LocalDate.now(),
@@ -348,6 +366,7 @@ class AtividadeComplementarServiceTest {
         assertThrows(
                 CertificadoInvalidoException.class,
                 () -> service.cadastrarAtividade(request, arquivoVazio, EMAIL));
+
         verify(usuarioContrato, never()).buscarPorEmail(any());
         verify(atividadeRepository, never()).save(any());
     }
@@ -357,7 +376,8 @@ class AtividadeComplementarServiceTest {
     void cadastroComTipoDeArquivoNaoSuportadoLancaCertificadoInvalidoException() {
         MockMultipartFile arquivoInvalido = new MockMultipartFile(
                 "arquivo", "certificado.txt", "text/plain", "conteudo".getBytes());
-        CadastroAtividadeRequest request = new CadastroAtividadeRequest(
+
+        CadastroAtividadeRequestDTO request = new CadastroAtividadeRequestDTO(
                 "Atividade de teste",
                 "Instituicao",
                 LocalDate.now(),
@@ -368,7 +388,214 @@ class AtividadeComplementarServiceTest {
         assertThrows(
                 CertificadoInvalidoException.class,
                 () -> service.cadastrarAtividade(request, arquivoInvalido, EMAIL));
+
         verify(usuarioContrato, never()).buscarPorEmail(any());
         verify(atividadeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Edicao do proprio registro sem novo arquivo atualiza campos e mantem certificado original")
+    void edicaoDoProprioRegistroSemNovoArquivoAtualizaCamposEMantemCertificadoOriginal() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        estudante.setId(1L);
+
+        AtividadeComplementar atividadeOriginal = criarAtividadeComCertificado(estudante,
+                "/tmp/certificado_antigo.pdf");
+        atividadeOriginal.setId(ID_ATIVIDADE);
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo Atualizado",
+                "Nova Instituicao",
+                LocalDate.of(2026, 6, 1),
+                40,
+                Natureza.ACEX,
+                Categoria.EXTENSAO);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeOriginal));
+        when(atividadeRepository.save(any(AtividadeComplementar.class))).thenAnswer(i -> i.getArgument(0));
+
+        AtividadeResponseDTO resposta = service.atualizarAtividade(ID_ATIVIDADE, request, null, EMAIL);
+
+        assertEquals("Titulo Atualizado", resposta.titulo());
+        assertEquals("Nova Instituicao", resposta.instituicaoResponsavel());
+        assertEquals(LocalDate.of(2026, 6, 1), resposta.dataRealizacao());
+        assertEquals(40, resposta.cargaHorariaEmHoras());
+        assertEquals(Natureza.ACEX, resposta.natureza());
+        assertEquals(Categoria.EXTENSAO, resposta.categoria());
+
+        verify(armazenamentoCertificadoService, never()).armazenar(any());
+        verify(atividadeRepository).save(atividadeOriginal);
+    }
+
+    @Test
+    @DisplayName("Edicao com novo arquivo valido substitui o certificado e remove o arquivo antigo do disco")
+    void edicaoComNovoArquivoValidoSubstituiCertificadoERemoveArquivoAntigoDoDisco() throws IOException {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        estudante.setId(1L);
+
+        Path arquivoAntigo = tempDir.resolve("certificado_antigo.pdf");
+        Files.createFile(arquivoAntigo);
+
+        AtividadeComplementar atividadeOriginal = criarAtividadeComCertificado(estudante,
+                arquivoAntigo.toString());
+        atividadeOriginal.setId(ID_ATIVIDADE);
+
+        MockMultipartFile novoArquivo = new MockMultipartFile(
+                "arquivo", "novo_certificado.pdf", "application/pdf", "conteudo".getBytes());
+        Certificado novoCertificado = new Certificado(
+                "novo_certificado.pdf", "application/pdf", 200L,
+                tempDir.resolve("novo_certificado.pdf").toString());
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo Atualizado",
+                "Instituicao",
+                LocalDate.now(),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeOriginal));
+        when(armazenamentoCertificadoService.armazenar(novoArquivo)).thenReturn(novoCertificado);
+        when(atividadeRepository.save(any(AtividadeComplementar.class))).thenAnswer(i -> i.getArgument(0));
+
+        AtividadeResponseDTO resposta = service.atualizarAtividade(ID_ATIVIDADE, request, novoArquivo, EMAIL);
+
+        assertNotNull(resposta);
+        assertEquals(novoCertificado, atividadeOriginal.getCertificado());
+        assertTrue(Files.notExists(arquivoAntigo),
+                "O arquivo antigo em disco deveria ter sido removido apos o sucesso");
+        verify(armazenamentoCertificadoService).armazenar(novoArquivo);
+        verify(atividadeRepository).save(atividadeOriginal);
+    }
+
+    @Test
+    @DisplayName("Edicao com arquivo invalido lanca CertificadoInvalidoException sem alterar nem persistir")
+    void edicaoComArquivoInvalidoLancaCertificadoInvalidoException() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        estudante.setId(1L);
+
+        AtividadeComplementar atividadeOriginal = criarAtividadeComCertificado(estudante, "/tmp/antigo.pdf");
+        atividadeOriginal.setId(ID_ATIVIDADE);
+
+        MockMultipartFile arquivoInvalido = new MockMultipartFile(
+                "arquivo", "documento.exe", "application/x-msdownload", "conteudo".getBytes());
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo",
+                "Instituicao",
+                LocalDate.now(),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeOriginal));
+
+        assertThrows(
+                CertificadoInvalidoException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, request, arquivoInvalido, EMAIL));
+
+        verify(armazenamentoCertificadoService, never()).armazenar(any());
+        verify(atividadeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Edicao de atividade pertencente a outro estudante lanca AcessoNegadoAtividadeException")
+    void edicaoDeAtividadeDeOutroEstudanteLancaAcessoNegado() {
+        Estudante estudanteAutenticado = new Estudante("Estudante 1", EMAIL, "hash");
+        estudanteAutenticado.setId(1L);
+
+        Estudante outroEstudante = new Estudante("Estudante 2", "outro@ufape.edu.br", "hash");
+        outroEstudante.setId(2L);
+
+        AtividadeComplementar atividadeDeOutro = criarAtividade(Natureza.ACC, Categoria.PESQUISA,
+                outroEstudante);
+        atividadeDeOutro.setId(ID_ATIVIDADE);
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo",
+                "Instituicao",
+                LocalDate.now(),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudanteAutenticado));
+        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeDeOutro));
+
+        assertThrows(
+                AcessoNegadoAtividadeException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, request, null, EMAIL));
+
+        verify(atividadeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Edicao com id inexistente lanca AtividadeNaoEncontradaException")
+    void edicaoComIdInexistenteLancaAtividadeNaoEncontradaException() {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        estudante.setId(1L);
+        Long idInexistente = 9999L;
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo",
+                "Instituicao",
+                LocalDate.now(),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(
+                AtividadeNaoEncontradaException.class,
+                () -> service.atualizarAtividade(idInexistente, request, null, EMAIL));
+
+        verify(atividadeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Falha ao salvar edicao remove o novo certificado gravado em disco (compensacao)")
+    void falhaAoSalvarEdicaoRemoveNovoCertificadoGravadoEmDisco() throws IOException {
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        estudante.setId(1L);
+
+        Path arquivoAntigo = tempDir.resolve("antigo.pdf");
+        Files.createFile(arquivoAntigo);
+
+        AtividadeComplementar atividade = criarAtividadeComCertificado(estudante, arquivoAntigo.toString());
+        atividade.setId(ID_ATIVIDADE);
+
+        Path novoArquivoPath = tempDir.resolve("novo.pdf");
+        Files.createFile(novoArquivoPath);
+
+        Certificado novoCertificado = new Certificado(
+                "novo.pdf", "application/pdf", 100L, novoArquivoPath.toString());
+        MockMultipartFile arquivo = new MockMultipartFile(
+                "arquivo", "novo.pdf", "application/pdf", "conteudo".getBytes());
+
+        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO(
+                "Titulo",
+                "Instituicao",
+                LocalDate.now(),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA);
+
+        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividade));
+        when(armazenamentoCertificadoService.armazenar(arquivo)).thenReturn(novoCertificado);
+        when(atividadeRepository.save(any())).thenThrow(new RuntimeException("Falha de banco de dados"));
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.atualizarAtividade(ID_ATIVIDADE, request, arquivo, EMAIL));
+
+        assertTrue(Files.notExists(novoArquivoPath),
+                "O novo arquivo gravado deveria ter sido removido na compensacao");
+        assertTrue(Files.exists(arquivoAntigo), "O arquivo antigo deve ser preservado se a transacao falhar");
     }
 }

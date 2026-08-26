@@ -1,23 +1,31 @@
 package br.edu.ufape.backend.atividade.service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import br.edu.ufape.backend.atividade.dto.AtividadeResponse;
-import br.edu.ufape.backend.atividade.dto.CadastroAtividadeRequest;
+import br.edu.ufape.backend.atividade.dto.AtividadeResponseDTO;
+import br.edu.ufape.backend.atividade.dto.AtualizarAtividadeRequestDTO;
+import br.edu.ufape.backend.atividade.dto.CadastroAtividadeRequestDTO;
 import br.edu.ufape.backend.atividade.exception.AcessoNegadoAtividadeException;
+import br.edu.ufape.backend.atividade.exception.AtividadeNaoEncontradaException;
 import br.edu.ufape.backend.atividade.model.AtividadeComplementar;
 import br.edu.ufape.backend.atividade.model.Categoria;
 import br.edu.ufape.backend.atividade.model.Natureza;
-import br.edu.ufape.backend.certificados.exception.CertificadoInvalidoException;
+import br.edu.ufape.backend.atividade.model.ParecerConformidade;
+import br.edu.ufape.backend.atividade.model.StatusAtividade;
 import br.edu.ufape.backend.atividade.repository.AtividadeComplementarRepository;
+import br.edu.ufape.backend.atividade.repository.ParecerConformidadeRepository;
+import br.edu.ufape.backend.certificados.exception.CertificadoInvalidoException;
 import br.edu.ufape.backend.certificados.model.Certificado;
 import br.edu.ufape.backend.certificados.service.ArmazenamentoCertificadoService;
 import br.edu.ufape.backend.usuario.contrato.UsuarioContrato;
@@ -28,27 +36,30 @@ import br.edu.ufape.backend.usuario.model.Usuario;
 public class AtividadeComplementarService {
 
     private static final String MENSAGEM_ACESSO_NEGADO = "Apenas estudantes podem listar atividades complementares.";
-
-    /*
-     * Mesma mensagem/exceção usada tanto para "atividade não existe" quanto para
-     * "atividade pertence a outro estudante". É proposital: distinguir os dois
-     * casos permitiria a um usuário mal-intencionado descobrir quais IDs existem
-     * no banco só testando exclusões (enumeração de recursos).
-     */
-    private static final String MENSAGEM_ACESSO_NEGADO_EXCLUSAO =
-            "Atividade não encontrada ou não pertence ao estudante autenticado.";
+    private static final String MENSAGEM_ACESSO_NEGADO_EDICAO = "Você não tem permissão para editar esta atividade.";
+    private static final String MENSAGEM_ACESSO_NEGADO_EXCLUSAO = "Atividade não encontrada ou não pertence ao estudante autenticado.";
 
     private final AtividadeComplementarRepository atividadeRepository;
     private final UsuarioContrato usuarioContrato;
     private final ArmazenamentoCertificadoService armazenamentoCertificadoService;
+    private final AuditoriaConformidadeService auditoriaConformidadeService;
+    private final ParecerConformidadeRepository parecerConformidadeRepository;
 
     public AtividadeComplementarService(
             AtividadeComplementarRepository atividadeRepository,
             UsuarioContrato usuarioContrato,
-            ArmazenamentoCertificadoService armazenamentoCertificadoService) {
+            ArmazenamentoCertificadoService armazenamentoCertificadoService,
+            AuditoriaConformidadeService auditoriaConformidadeService,
+            ParecerConformidadeRepository parecerConformidadeRepository) {
         this.atividadeRepository = atividadeRepository;
         this.usuarioContrato = usuarioContrato;
         this.armazenamentoCertificadoService = armazenamentoCertificadoService;
+        this.auditoriaConformidadeService = auditoriaConformidadeService;
+        this.parecerConformidadeRepository = parecerConformidadeRepository;
+    }
+
+    public ParecerConformidade auditarOuObterParecer(AtividadeComplementar atividade) {
+        return auditoriaConformidadeService.auditarOuObterParecer(atividade);
     }
 
     public List<AtividadeComplementar> listarAtividadesDoEstudante(
@@ -58,20 +69,44 @@ public class AtividadeComplementarService {
     }
 
     public List<AtividadeComplementar> listarAtividadesDoEstudante(Long estudanteId) {
-        return atividadeRepository.findByEstudanteId(estudanteId);
+            return atividadeRepository.findByEstudanteId(estudanteId);
     }
 
+    public Resource obterArquivoCertificado(Long id, String emailEstudante) {
+        Estudante estudante = obterEstudante(emailEstudante);
+        AtividadeComplementar atividade = atividadeRepository.findById(id)
+                .orElseThrow(() -> new AtividadeNaoEncontradaException("Atividade não encontrada."));
+
+        if (!atividade.getEstudante().getId().equals(estudante.getId())) {
+            throw new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_EDICAO);
+        }
+
+        Certificado certificado = atividade.getCertificado();
+        if (certificado == null || certificado.getReferencia() == null) {
+            throw new AtividadeNaoEncontradaException("Certificado não encontrado para esta atividade.");
+        }
+
+        try {
+            Path caminho = Paths.get(certificado.getReferencia());
+            Resource resource = new UrlResource(caminho.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new AtividadeNaoEncontradaException("Arquivo físico do certificado não encontrado no servidor.");
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Erro ao recuperar arquivo do certificado", e);
+        }
+    }
 
     @Transactional
-    public AtividadeResponse cadastrarAtividade(CadastroAtividadeRequest request, MultipartFile arquivo,
+    public AtividadeResponseDTO cadastrarAtividade(CadastroAtividadeRequestDTO request, MultipartFile arquivo,
             String emailEstudante) {
         validarTipoArquivo(arquivo);
-
         Usuario estudante = usuarioContrato.buscarPorEmail(emailEstudante)
-            .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
 
         Certificado certificado = armazenamentoCertificadoService.armazenar(arquivo);
-
         AtividadeComplementar atividade = new AtividadeComplementar(
                 request.titulo(),
                 request.instituicaoResponsavel(),
@@ -84,9 +119,8 @@ public class AtividadeComplementarService {
 
         try {
             AtividadeComplementar atividadeSalva = atividadeRepository.save(atividade);
-            return new AtividadeResponse(atividadeSalva);
+            return new AtividadeResponseDTO(atividadeSalva);
         } catch (RuntimeException e) {
-            // compensa a gravação em disco já feita, evitando certificado órfão
             try {
                 Files.deleteIfExists(Paths.get(certificado.getReferencia()));
             } catch (IOException ioException) {
@@ -97,22 +131,74 @@ public class AtividadeComplementarService {
     }
 
     @Transactional
+    public AtividadeResponseDTO atualizarAtividade(Long id, AtualizarAtividadeRequestDTO request,
+            MultipartFile novoArquivo, String emailEstudante) {
+        Estudante estudante = obterEstudante(emailEstudante);
+        AtividadeComplementar atividade = atividadeRepository.findById(id)
+                .orElseThrow(() -> new AtividadeNaoEncontradaException("Atividade não encontrada."));
+
+        if (!atividade.getEstudante().getId().equals(estudante.getId())) {
+            throw new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_EDICAO);
+        }
+
+        atividade.setTitulo(request.titulo());
+        atividade.setInstituicaoResponsavel(request.instituicaoResponsavel());
+        atividade.setDataRealizacao(request.dataRealizacao());
+        atividade.setCargaHorariaEmHoras(request.cargaHoraria());
+        atividade.setNatureza(request.natureza());
+        atividade.setCategoria(request.categoria());
+
+        // Reset de status para PENDENTE na edição para evitar inconsistência de horas
+        atividade.setStatus(StatusAtividade.PENDENTE);
+
+        Certificado certificadoAntigo = atividade.getCertificado();
+        Certificado novoCertificado = null;
+
+        if (novoArquivo != null && !novoArquivo.isEmpty()) {
+            validarTipoArquivo(novoArquivo);
+            novoCertificado = armazenamentoCertificadoService.armazenar(novoArquivo);
+            atividade.setCertificado(novoCertificado);
+        }
+
+        try {
+            AtividadeComplementar atividadeSalva = atividadeRepository.save(atividade);
+
+            // Invalida o parecer antigo para forçar nova auditoria
+            parecerConformidadeRepository.findByAtividadeId(id).ifPresent(parecerConformidadeRepository::delete);
+
+            if (novoCertificado != null && certificadoAntigo != null) {
+                removerArquivoCertificado(certificadoAntigo);
+            }
+
+            return new AtividadeResponseDTO(atividadeSalva);
+        } catch (RuntimeException e) {
+            if (novoCertificado != null) {
+                removerArquivoCertificado(novoCertificado);
+            }
+            throw e;
+        }
+    }
+
+    @Transactional
     public void excluirAtividade(Long id, String emailEstudante) {
         Estudante estudante = obterEstudante(emailEstudante);
-
         AtividadeComplementar atividade = atividadeRepository.findByIdAndEstudante(id, estudante)
                 .orElseThrow(() -> new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO_EXCLUSAO));
 
+        parecerConformidadeRepository.findByAtividadeId(id).ifPresent(parecerConformidadeRepository::delete);
         removerArquivoCertificado(atividade.getCertificado());
-
         atividadeRepository.delete(atividade);
+    }
+
+    public AtividadeComplementar buscarPorId(Long id) {
+        return atividadeRepository.findById(id)
+                .orElseThrow(() -> new AtividadeNaoEncontradaException("Atividade não encontrada com o id: " + id));
     }
 
     private void removerArquivoCertificado(Certificado certificado) {
         if (certificado == null || certificado.getReferencia() == null) {
             return;
         }
-
         try {
             Files.deleteIfExists(Path.of(certificado.getReferencia()));
         } catch (IOException ex) {
@@ -127,7 +213,6 @@ public class AtividadeComplementarService {
         if (!(usuario instanceof Estudante estudante)) {
             throw new AcessoNegadoAtividadeException(MENSAGEM_ACESSO_NEGADO);
         }
-
         return estudante;
     }
 
@@ -135,7 +220,6 @@ public class AtividadeComplementarService {
         if (arquivo == null || arquivo.isEmpty()) {
             throw new CertificadoInvalidoException("Arquivo de certificado não pode ser vazio");
         }
-
         String tipo = arquivo.getContentType();
         if (tipo == null || !(tipo.equals("application/pdf") || tipo.equals("image/png") || tipo.equals("image/jpeg")
                 || tipo.equals("image/jpg"))) {
