@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class SolicitacaoNaoEncontradaException extends RuntimeException {
 
     public SolicitacaoNaoEncontradaException(Long id) {
-        super("Solicitacao nao encontrada: " + id);
+        super("Solicitação não encontrada: " + id);
     }
 }

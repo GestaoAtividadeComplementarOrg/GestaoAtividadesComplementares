@@ -15,6 +15,10 @@ public class SolicitacaoValidacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
+
     @Column(name = "estudante_id", nullable = false)
     private Long estudanteId;
 
@@ -46,6 +50,9 @@ public class SolicitacaoValidacao {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 
     public Long getEstudanteId() { return estudanteId; }
     public void setEstudanteId(Long estudanteId) { this.estudanteId = estudanteId; }

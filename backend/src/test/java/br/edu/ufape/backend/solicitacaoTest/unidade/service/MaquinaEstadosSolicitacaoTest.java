@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MaquinaEstadosSolicitacaoTest {
 
-    // ---- Transicoes validas ----
+    // ---- Transicoes validas — SUBMETIDA ----
 
     @Test
     @DisplayName("SUBMETIDA pode transitar para EM_ANALISE")
@@ -20,25 +20,27 @@ class MaquinaEstadosSolicitacaoTest {
     }
 
     @Test
-    @DisplayName("SUBMETIDA pode transitar diretamente para APROVADA (transicao implicita)")
+    @DisplayName("SUBMETIDA pode transitar diretamente para APROVADA")
     void submetidaParaAprovadaDireta() {
         assertDoesNotThrow(() ->
                 MaquinaEstadosSolicitacao.validar(StatusSolicitacao.SUBMETIDA, StatusSolicitacao.APROVADA));
     }
 
     @Test
-    @DisplayName("SUBMETIDA pode transitar diretamente para REJEITADA (transicao implicita)")
+    @DisplayName("SUBMETIDA pode transitar diretamente para REJEITADA")
     void submetidaParaRejeitadaDireta() {
         assertDoesNotThrow(() ->
                 MaquinaEstadosSolicitacao.validar(StatusSolicitacao.SUBMETIDA, StatusSolicitacao.REJEITADA));
     }
 
     @Test
-    @DisplayName("SUBMETIDA pode transitar diretamente para COM_PENDENCIAS (transicao implicita)")
+    @DisplayName("SUBMETIDA pode transitar diretamente para COM_PENDENCIAS")
     void submetidaParaComPendenciasDireta() {
         assertDoesNotThrow(() ->
                 MaquinaEstadosSolicitacao.validar(StatusSolicitacao.SUBMETIDA, StatusSolicitacao.COM_PENDENCIAS));
     }
+
+    // ---- Transicoes validas — EM_ANALISE ----
 
     @Test
     @DisplayName("EM_ANALISE pode transitar para APROVADA")
@@ -61,6 +63,15 @@ class MaquinaEstadosSolicitacaoTest {
                 MaquinaEstadosSolicitacao.validar(StatusSolicitacao.EM_ANALISE, StatusSolicitacao.COM_PENDENCIAS));
     }
 
+    // ---- Transicoes validas — COM_PENDENCIAS (re-submissao, US futura) ----
+
+    @Test
+    @DisplayName("COM_PENDENCIAS pode transitar para SUBMETIDA (re-submissao pelo estudante — US futura)")
+    void comPendenciasParaSubmetida() {
+        assertDoesNotThrow(() ->
+                MaquinaEstadosSolicitacao.validar(StatusSolicitacao.COM_PENDENCIAS, StatusSolicitacao.SUBMETIDA));
+    }
+
     // ---- Transicoes invalidas ----
 
     @Test
@@ -78,7 +89,7 @@ class MaquinaEstadosSolicitacaoTest {
     }
 
     @Test
-    @DisplayName("COM_PENDENCIAS nao pode transitar para APROVADA — deve lancar 409")
+    @DisplayName("COM_PENDENCIAS nao pode transitar diretamente para APROVADA — deve lancar 409")
     void comPendenciasParaAprovadaDeveLancarExcecao() {
         assertThrows(TransicaoEstadoInvalidaException.class, () ->
                 MaquinaEstadosSolicitacao.validar(StatusSolicitacao.COM_PENDENCIAS, StatusSolicitacao.APROVADA));
