@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.model;
+package br.edu.ufape.backend.solicitacao.model;
 
 import jakarta.persistence.*;
 

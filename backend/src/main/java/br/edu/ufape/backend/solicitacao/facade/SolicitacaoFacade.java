@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.facade;
+package br.edu.ufape.backend.solicitacao.facade;
 
 import br.edu.ufape.backend.autenticacao.exception.UnauthorizedException;
 import br.edu.ufape.backend.solicitacao.dto.SolicitacaoDetalheResponseDTO;

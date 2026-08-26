@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.contrato;
+package br.edu.ufape.backend.solicitacao.contrato;
 
 public interface SolicitacaoContrato {
 

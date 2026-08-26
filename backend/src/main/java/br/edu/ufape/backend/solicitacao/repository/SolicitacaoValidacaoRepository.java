@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.repository;
+package br.edu.ufape.backend.solicitacao.repository;
 
 import br.edu.ufape.backend.solicitacao.model.SolicitacaoValidacao;
 import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;

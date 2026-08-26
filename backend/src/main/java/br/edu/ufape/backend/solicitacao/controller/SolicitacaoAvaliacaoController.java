@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.controller;
+package br.edu.ufape.backend.solicitacao.controller;
 
 import br.edu.ufape.backend.solicitacao.dto.AvaliacaoSolicitacaoRequestDTO;
 import br.edu.ufape.backend.solicitacao.dto.SolicitacaoDetalheResponseDTO;

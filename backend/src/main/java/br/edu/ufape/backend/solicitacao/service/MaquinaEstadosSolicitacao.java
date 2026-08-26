@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.service;
+package br.edu.ufape.backend.solicitacao.service;
 
 import br.edu.ufape.backend.solicitacao.exception.TransicaoEstadoInvalidaException;
 import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;

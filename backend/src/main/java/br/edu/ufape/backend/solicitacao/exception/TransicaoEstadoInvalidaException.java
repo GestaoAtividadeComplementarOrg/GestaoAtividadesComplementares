@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.exception;
+package br.edu.ufape.backend.solicitacao.exception;
 
 import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
 import org.springframework.http.HttpStatus;

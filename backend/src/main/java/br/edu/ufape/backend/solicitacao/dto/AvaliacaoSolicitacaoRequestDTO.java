@@ -1,4 +1,4 @@
-﻿package br.edu.ufape.backend.solicitacao.dto;
+package br.edu.ufape.backend.solicitacao.dto;
 
 import br.edu.ufape.backend.solicitacao.model.DecisaoAvaliacao;
 import jakarta.validation.constraints.NotNull;
