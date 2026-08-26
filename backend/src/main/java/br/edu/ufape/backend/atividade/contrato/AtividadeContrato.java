@@ -18,4 +18,7 @@ public interface AtividadeContrato {
      * ou não pertencer a um Estudante
      */
     List<AtividadeResponse> buscarPorEstudanteENatureza(String emailEstudante, Natureza natureza);
+
+    List<AtividadeResponse> buscarPorEstudanteId(Long estudanteId);
 }
+

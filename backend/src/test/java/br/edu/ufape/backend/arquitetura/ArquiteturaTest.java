@@ -37,6 +37,13 @@ class ArquiteturaTest {
             .because("O repositório de atividades é de uso exclusivo interno do módulo de atividades");
 
     @ArchTest
+    static final ArchRule nenhumaClasseForaDeSolicitacaoDeveAcessarRepositoryDeSolicitacao =
+        noClasses()
+            .that().resideOutsideOfPackage("..solicitacao..")
+            .should().dependOnClassesThat().resideInAPackage("..solicitacao.repository..")
+            .because("O repositório de solicitações é de uso exclusivo interno do módulo de solicitações");
+
+    @ArchTest
     static final ArchRule controllersNaoDevemDependerDeRepositories =
         noClasses()
             .that().resideInAPackage("..controller..")

@@ -124,4 +124,30 @@ class AtividadeContratoImplTest {
         assertEquals(EMAIL, resultado.get(0).estudanteEmail());
         verify(atividadeComplementarService).listarAtividadesDoEstudante(EMAIL, null, null);
     }
+
+    @Test
+    @DisplayName("Deve delegar busca de atividades por estudanteId para o service")
+    void deveDelegarBuscaPorEstudanteId() {
+        Long estudanteId = 1L;
+        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+        AtividadeComplementar atividade = new AtividadeComplementar(
+                "Atividade de teste ID",
+                "Instituicao",
+                LocalDate.of(2026, 8, 19),
+                20,
+                Natureza.ACC,
+                Categoria.PESQUISA,
+                null,
+                estudante);
+        when(atividadeComplementarService.listarAtividadesDoEstudante(estudanteId))
+                .thenReturn(List.of(atividade));
+
+        List<AtividadeResponse> resultado = atividadeContrato.buscarPorEstudanteId(estudanteId);
+
+        assertEquals(1, resultado.size());
+        assertEquals(atividade.getTitulo(), resultado.get(0).titulo());
+        assertEquals(20, resultado.get(0).cargaHorariaEmHoras());
+        verify(atividadeComplementarService).listarAtividadesDoEstudante(estudanteId);
+    }
 }
+

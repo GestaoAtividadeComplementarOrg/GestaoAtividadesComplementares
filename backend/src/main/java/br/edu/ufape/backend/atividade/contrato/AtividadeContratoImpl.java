@@ -35,4 +35,13 @@ public class AtividadeContratoImpl implements AtividadeContrato {
                 .map(AtividadeResponse::new)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AtividadeResponse> buscarPorEstudanteId(Long estudanteId) {
+        return atividadeComplementarService.listarAtividadesDoEstudante(estudanteId)
+                .stream()
+                .map(AtividadeResponse::new)
+                .toList();
+    }
 }

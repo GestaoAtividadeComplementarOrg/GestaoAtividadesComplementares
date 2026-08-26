@@ -79,6 +79,10 @@ public class SecurityConfig {
                                         auth.requestMatchers(HttpMethod.GET, "/api/v1/atividades",
                                                         "/api/v1/atividades/progresso").hasRole("ESTUDANTE");
 
+                                        // Rotas de solicitacoes
+                                        auth.requestMatchers(HttpMethod.POST, "/api/v1/solicitacoes")
+                                                        .hasRole("ESTUDANTE");
+
                                         auth.anyRequest().authenticated();
                                 })
                                 .exceptionHandling(exception -> exception

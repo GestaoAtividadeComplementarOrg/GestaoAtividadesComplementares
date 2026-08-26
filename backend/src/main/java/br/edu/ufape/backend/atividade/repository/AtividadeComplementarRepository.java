@@ -16,6 +16,8 @@ public interface AtividadeComplementarRepository extends JpaRepository<Atividade
 
     List<AtividadeComplementar> findByEstudante(Usuario estudante);
 
+    List<AtividadeComplementar> findByEstudanteId(Long estudanteId);
+
     List<AtividadeComplementar> findByEstudanteAndNatureza(Usuario estudante, Natureza natureza);
 
     @Query("""

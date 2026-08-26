@@ -57,6 +57,11 @@ public class AtividadeComplementarService {
         return atividadeRepository.findByEstudanteComFiltros(estudante, natureza, categoria);
     }
 
+    public List<AtividadeComplementar> listarAtividadesDoEstudante(Long estudanteId) {
+        return atividadeRepository.findByEstudanteId(estudanteId);
+    }
+
+
     @Transactional
     public AtividadeResponse cadastrarAtividade(CadastroAtividadeRequest request, MultipartFile arquivo,
             String emailEstudante) {
