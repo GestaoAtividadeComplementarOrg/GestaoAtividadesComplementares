@@ -58,7 +58,7 @@ class SolicitacaoAvaliacaoControllerTest {
         return new SolicitacaoDetalheResponseDTO(
                 1L, StatusSolicitacao.APROVADA,
                 LocalDateTime.now(), LocalDateTime.now(),
-                null, List.of());
+                null, List.of(), 0);
     }
 
     // ---- 200 ----
