@@ -121,7 +121,8 @@ class AtividadeControllerPutIntegrationTest {
                                                 .param("dataRealizacao", "2026-05-10")
                                                 .param("cargaHoraria", "10")
                                                 .param("natureza", "ACC")
-                                                .param("categoria", "ENSINO"))
+                                                .param("categoria", "ENSINO")
+                                                .param("instituicaoResponsavel", "UFAPE"))
                                 .andExpect(status().isForbidden());
         }
 
@@ -148,7 +149,8 @@ class AtividadeControllerPutIntegrationTest {
                                                 .param("dataRealizacao", "2026-05-10")
                                                 .param("cargaHoraria", "10")
                                                 .param("natureza", "ACC")
-                                                .param("categoria", "ENSINO"))
+                                                .param("categoria", "ENSINO")
+                                                .param("instituicaoResponsavel", "UFAPE"))
                                 .andExpect(status().isNotFound());
         }
 
@@ -179,7 +181,44 @@ class AtividadeControllerPutIntegrationTest {
                                                 .param("dataRealizacao", "2026-05-10")
                                                 .param("cargaHoraria", "10")
                                                 .param("natureza", "ACC")
-                                                .param("categoria", "ENSINO"))
+                                                .param("categoria", "ENSINO")
+                                                .param("instituicaoResponsavel", "UFAPE"))
                                 .andExpect(status().isUnauthorized());
+        }
+        
+        @Test
+        @DisplayName("Deve retornar 400 quando a instituição responsavel estiver em branco")
+        void deveRetornar400QuandoInstituicaoResponsavelEstiverEmBranco() throws Exception {
+                mockMvc.perform(
+                                MockMvcRequestBuilders.multipart(
+                                                HttpMethod.PUT,
+                                                "/api/v1/atividades/1")
+                                                .principal(new UsernamePasswordAuthenticationToken(
+                                                                "estudante@ufape.edu.br", "password"))
+                                                .param("titulo", "tentativa válida")
+                                                .param("dataRealizacao", "2026-05-10")
+                                                .param("cargaHoraria", "15")
+                                                .param("natureza", "ACC")
+                                                .param("categoria", "ENSINO")
+                                                .param("instituicaoResponsavel", " "))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 quandoa data de realização estiver no futuro")
+        void deveRetornar400QuandoDataRealizacaoEstiverNoFuturo() throws Exception {
+                mockMvc.perform(
+                                MockMvcRequestBuilders.multipart(
+                                                HttpMethod.PUT,
+                                                "/api/v1/atividades/1")
+                                                .principal(new UsernamePasswordAuthenticationToken(
+                                                                "estudante@ufape.edu.br", "password"))
+                                                .param("titulo", "Título Válido")
+                                                .param("dataRealizacao", "2028-05-10")
+                                                .param("cargaHoraria", "10")
+                                                .param("natureza", "ACC")
+                                                .param("categoria", "ENSINO")
+                                                .param("instituicaoResponsavel", "UFAPE"))
+                                .andExpect(status().isBadRequest());
         }
 }
