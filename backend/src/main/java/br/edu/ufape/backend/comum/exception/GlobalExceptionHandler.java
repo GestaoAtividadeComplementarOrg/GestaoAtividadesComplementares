@@ -20,6 +20,8 @@ import br.edu.ufape.backend.autenticacao.exception.EmailJaCadastradoException;
 import br.edu.ufape.backend.autenticacao.exception.PerfilNaoPermitidoException;
 import br.edu.ufape.backend.autenticacao.exception.UnauthorizedException;
 import br.edu.ufape.backend.certificados.exception.CertificadoInvalidoException;
+import br.edu.ufape.backend.solicitacao.exception.SolicitacaoNaoEncontradaException;
+import br.edu.ufape.backend.solicitacao.exception.TransicaoEstadoInvalidaException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -75,6 +77,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
+    @ExceptionHandler(SolicitacaoNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> tratarSolicitacaoNaoEncontrada(SolicitacaoNaoEncontradaException ex) {
+        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
     @ExceptionHandler(AcessoNegadoAtividadeException.class)
     public ResponseEntity<ErroResponse> tratarAcessoNegadoAtividade(AcessoNegadoAtividadeException ex) {
         ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.FORBIDDEN.value());
@@ -89,6 +97,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailJaCadastradoException.class)
     public ResponseEntity<ErroResponse> tratarEmailDuplicado(EmailJaCadastradoException ex) {
+        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
+    }
+
+    @ExceptionHandler(TransicaoEstadoInvalidaException.class)
+    public ResponseEntity<ErroResponse> tratarTransicaoEstadoInvalida(TransicaoEstadoInvalidaException ex) {
         ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.CONFLICT.value());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
     }
