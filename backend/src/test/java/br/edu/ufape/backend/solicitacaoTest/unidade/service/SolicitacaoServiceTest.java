@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +36,8 @@ class SolicitacaoServiceTest {
         s.setStatus(status);
         return s;
     }
+
+    // ---- avaliar ----
 
     @Test
     @DisplayName("Deve aprovar solicitacao SUBMETIDA e persistir avaliadorId e dataAvaliacao")
@@ -113,5 +116,43 @@ class SolicitacaoServiceTest {
 
         assertThrows(TransicaoEstadoInvalidaException.class, () ->
                 service.avaliar(10L, 99L, DecisaoAvaliacao.REJEITADA, "Tentativa invalida."));
+    }
+
+    // ---- existeSolicitacaoEmAberto ----
+
+    @Test
+    @DisplayName("Deve retornar true quando houver solicitacao em aberto com a atividade")
+    void deveRetornarTrueParaAtividadeEmAberto() {
+        when(repository.existsByItens_AtividadeIdAndStatusIn(eq(5L), any()))
+                .thenReturn(true);
+
+        assertTrue(service.existeSolicitacaoEmAbertoComAtividade(5L));
+    }
+
+    @Test
+    @DisplayName("Deve retornar false quando nao houver solicitacao em aberto com a atividade")
+    void deveRetornarFalseParaAtividadeSemSolicitacaoAberta() {
+        when(repository.existsByItens_AtividadeIdAndStatusIn(eq(5L), any()))
+                .thenReturn(false);
+
+        assertFalse(service.existeSolicitacaoEmAbertoComAtividade(5L));
+    }
+
+    @Test
+    @DisplayName("Deve retornar true quando estudante tiver solicitacao em aberto")
+    void deveRetornarTrueParaEstudanteComSolicitacaoAberta() {
+        when(repository.existsByEstudanteIdAndStatusIn(eq(7L), any()))
+                .thenReturn(true);
+
+        assertTrue(service.existeSolicitacaoEmAbertoDoEstudante(7L));
+    }
+
+    @Test
+    @DisplayName("Deve retornar false quando estudante nao tiver solicitacao em aberto")
+    void deveRetornarFalseParaEstudanteSemSolicitacaoAberta() {
+        when(repository.existsByEstudanteIdAndStatusIn(eq(7L), any()))
+                .thenReturn(false);
+
+        assertFalse(service.existeSolicitacaoEmAbertoDoEstudante(7L));
     }
 }

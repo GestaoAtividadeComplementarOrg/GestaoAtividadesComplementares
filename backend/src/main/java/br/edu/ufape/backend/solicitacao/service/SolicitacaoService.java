@@ -9,9 +9,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class SolicitacaoService {
+
+    private static final List<StatusSolicitacao> EM_ABERTO = List.of(
+            StatusSolicitacao.SUBMETIDA,
+            StatusSolicitacao.EM_ANALISE,
+            StatusSolicitacao.COM_PENDENCIAS
+    );
 
     private final SolicitacaoValidacaoRepository repository;
 
@@ -40,5 +47,15 @@ public class SolicitacaoService {
         solicitacao.setDataAvaliacao(LocalDateTime.now());
 
         return repository.save(solicitacao);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existeSolicitacaoEmAbertoComAtividade(Long atividadeId) {
+        return repository.existsByItens_AtividadeIdAndStatusIn(atividadeId, EM_ABERTO);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existeSolicitacaoEmAbertoDoEstudante(Long estudanteId) {
+        return repository.existsByEstudanteIdAndStatusIn(estudanteId, EM_ABERTO);
     }
 }

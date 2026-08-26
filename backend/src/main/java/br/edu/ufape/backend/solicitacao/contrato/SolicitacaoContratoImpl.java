@@ -1,33 +1,24 @@
 package br.edu.ufape.backend.solicitacao.contrato;
 
-import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
-import br.edu.ufape.backend.solicitacao.repository.SolicitacaoValidacaoRepository;
+import br.edu.ufape.backend.solicitacao.service.SolicitacaoService;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class SolicitacaoContratoImpl implements SolicitacaoContrato {
 
-    private static final List<StatusSolicitacao> EM_ABERTO = List.of(
-            StatusSolicitacao.SUBMETIDA,
-            StatusSolicitacao.EM_ANALISE,
-            StatusSolicitacao.COM_PENDENCIAS
-    );
+    private final SolicitacaoService solicitacaoService;
 
-    private final SolicitacaoValidacaoRepository repository;
-
-    public SolicitacaoContratoImpl(SolicitacaoValidacaoRepository repository) {
-        this.repository = repository;
+    public SolicitacaoContratoImpl(SolicitacaoService solicitacaoService) {
+        this.solicitacaoService = solicitacaoService;
     }
 
     @Override
     public boolean existeSolicitacaoEmAbertoComAtividade(Long atividadeId) {
-        return repository.existsByItens_AtividadeIdAndStatusIn(atividadeId, EM_ABERTO);
+        return solicitacaoService.existeSolicitacaoEmAbertoComAtividade(atividadeId);
     }
 
     @Override
     public boolean existeSolicitacaoEmAbertoDoEstudante(Long estudanteId) {
-        return repository.existsByEstudanteIdAndStatusIn(estudanteId, EM_ABERTO);
+        return solicitacaoService.existeSolicitacaoEmAbertoDoEstudante(estudanteId);
     }
 }
