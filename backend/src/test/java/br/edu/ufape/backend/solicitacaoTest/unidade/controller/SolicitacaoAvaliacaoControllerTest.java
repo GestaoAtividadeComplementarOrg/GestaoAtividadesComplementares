@@ -1,4 +1,4 @@
-package br.edu.ufape.backend.solicitacaoTest.integracao.controller;
+package br.edu.ufape.backend.solicitacaoTest.unidade.controller;
 
 import br.edu.ufape.backend.comum.exception.GlobalExceptionHandler;
 import br.edu.ufape.backend.solicitacao.controller.SolicitacaoAvaliacaoController;
@@ -146,9 +146,4 @@ class SolicitacaoAvaliacaoControllerTest {
                 .andExpect(jsonPath("$.message").exists());
     }
 
-    // ---- 403 (nota) ----
-    // O acesso de ESTUDANTE retorna 403 garantido pelo SecurityConfig
-    // (hasRole("AVALIADOR") em PATCH /api/v1/solicitacoes/*/avaliacao).
-    // Este cenario e coberto pelo filtro JWT do Spring Security e nao
-    // e simulavel em standaloneSetup sem contexto completo de seguranca.
 }
