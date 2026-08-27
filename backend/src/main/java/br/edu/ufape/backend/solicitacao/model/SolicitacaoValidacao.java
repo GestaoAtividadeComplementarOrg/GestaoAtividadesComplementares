@@ -17,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "solicitacoes_validacao")
@@ -33,6 +34,7 @@ public class SolicitacaoValidacao {
     @Column(name = "estudante_id", nullable = false)
     private Long estudanteId;
 
+    @CreationTimestamp
     @Column(name = "data_submissao", nullable = false)
     private LocalDateTime dataSubmissao;
 

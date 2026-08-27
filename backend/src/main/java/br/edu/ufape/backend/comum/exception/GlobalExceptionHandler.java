@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<ErroResponse> tratarArquivoAusente(MissingServletRequestPartException ex) {
-        ErroResponse erro = new ErroResponse("Arquivo de certificado nao pode ser vazio", HttpStatus.BAD_REQUEST.value());
+        ErroResponse erro = new ErroResponse("Arquivo de certificado não pode ser vazio", HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErroResponse> tratarRecursoNaoEncontrado(NoResourceFoundException ex) {
-        ErroResponse erro = new ErroResponse("Recurso nao encontrado.", HttpStatus.NOT_FOUND.value());
+        ErroResponse erro = new ErroResponse("Recurso não encontrado.", HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
