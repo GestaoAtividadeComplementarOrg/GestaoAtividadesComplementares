@@ -9,4 +9,12 @@ public class SolicitacaoNaoEncontradaException extends RuntimeException {
     public SolicitacaoNaoEncontradaException(Long id) {
         super("Solicitação não encontrada: " + id);
     }
+
+    public SolicitacaoNaoEncontradaException(String mensagem) {
+        super(mensagem);
+    }
+
+    public SolicitacaoNaoEncontradaException() {
+        super("Solicitação não encontrada.");
+    }
 }

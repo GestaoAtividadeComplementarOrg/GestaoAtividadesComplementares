@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .filter(Objects::nonNull)
                 .findFirst()
-                .orElse("Erro de validacao nos campos da requisicao.");
+                .orElse("Erro de validação nos campos da requisição.");
         ErroResponse erro = new ErroResponse(mensagem, HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(Exception ex) {
         String msg = (ex.getMessage() != null && !ex.getMessage().isBlank())
                 ? ex.getMessage()
-                : "Parametros da requisicao invalidos ou ausentes.";
+                : "Parâmetros da requisição inválidos ou ausentes.";
         ErroResponse erro = new ErroResponse(msg, HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
@@ -75,12 +75,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AtividadeNaoEncontradaException.class)
     public ResponseEntity<ErroResponse> tratarAtividadeNaoEncontrada(AtividadeNaoEncontradaException ex) {
-        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
-    }
-
-    @ExceptionHandler(SolicitacaoNaoEncontradaException.class)
-    public ResponseEntity<ErroResponse> tratarSolicitacaoNaoEncontrada(SolicitacaoNaoEncontradaException ex) {
         ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
@@ -121,6 +115,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(erro);
     }
 
+    @ExceptionHandler(SolicitacaoNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> tratarSolicitacaoNaoEncontrada(SolicitacaoNaoEncontradaException ex) {
+        ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErroResponse> tratarUnauthorized(UnauthorizedException ex) {
         ErroResponse erro = new ErroResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED.value());
@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarCatchAll(Exception ex) {
-        log.error("Erro interno nao tratado no servidor", ex);
+        log.error("Erro interno não tratado no servidor", ex);
         ErroResponse erro = new ErroResponse(
                 "Ocorreu um erro interno inesperado no servidor.",
                 HttpStatus.INTERNAL_SERVER_ERROR.value()

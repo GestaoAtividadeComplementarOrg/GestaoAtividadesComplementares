@@ -39,18 +39,43 @@ public class SolicitacaoAtividade {
         this.natureza = natureza;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getAtividadeId() { return atividadeId; }
-    public void setAtividadeId(Long atividadeId) { this.atividadeId = atividadeId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public Long getAtividadeId() {
+        return atividadeId;
+    }
 
-    public Integer getCargaHoraria() { return cargaHoraria; }
-    public void setCargaHoraria(Integer cargaHoraria) { this.cargaHoraria = cargaHoraria; }
+    public void setAtividadeId(Long atividadeId) {
+        this.atividadeId = atividadeId;
+    }
 
-    public String getNatureza() { return natureza; }
-    public void setNatureza(String natureza) { this.natureza = natureza; }
+    public String getTitulo() {
+        return titulo;
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+
+    public Integer getCargaHoraria() {
+        return cargaHoraria;
+    }
+
+    public void setCargaHoraria(Integer cargaHoraria) {
+        this.cargaHoraria = cargaHoraria;
+    }
+
+    public String getNatureza() {
+        return natureza;
+    }
+
+    public void setNatureza(String natureza) {
+        this.natureza = natureza;
+    }
 }

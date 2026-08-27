@@ -1,10 +1,10 @@
 package br.edu.ufape.backend.solicitacao.dto;
 
-import br.edu.ufape.backend.solicitacao.model.SolicitacaoValidacao;
-import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import br.edu.ufape.backend.solicitacao.model.SolicitacaoValidacao;
+import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
 
 public record SolicitacaoDetalheResponseDTO(
         Long id,
@@ -22,10 +22,10 @@ public record SolicitacaoDetalheResponseDTO(
                 solicitacao.getDataSubmissao(),
                 solicitacao.getDataAvaliacao(),
                 solicitacao.getJustificativa(),
-                solicitacao.getItens().stream()
-                        .map(SolicitacaoAtividadeResponseDTO::new)
-                        .toList(),
-                solicitacao.getItens().size()
+                solicitacao.getItens() != null
+                        ? solicitacao.getItens().stream().map(SolicitacaoAtividadeResponseDTO::new).toList()
+                        : List.of(),
+                solicitacao.getItens() != null ? solicitacao.getItens().size() : 0
         );
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ufape.backend.atividade.contrato.AtividadeContrato;
 import br.edu.ufape.backend.atividade.dto.AtividadeResponseDTO;
+import br.edu.ufape.backend.solicitacao.dto.SolicitacaoResumoResponseDTO;
 import br.edu.ufape.backend.solicitacao.exception.EstudanteSemAtividadesException;
 import br.edu.ufape.backend.solicitacao.exception.SolicitacaoEmAbertoException;
 import br.edu.ufape.backend.solicitacao.exception.SolicitacaoNaoEncontradaException;
@@ -93,6 +94,17 @@ public class SolicitacaoService {
     }
 
     // ---- Metodos do contrato publico ----
+
+    @Transactional(readOnly = true)
+    public List<SolicitacaoResumoResponseDTO> listarDoEstudante(Long estudanteId) {
+        return solicitacaoValidacaoRepository.findResumosByEstudanteIdOrderByDataSubmissaoDesc(estudanteId);
+    }
+
+    @Transactional(readOnly = true)
+    public SolicitacaoValidacao detalhar(Long estudanteId, Long solicitacaoId) {
+        return solicitacaoValidacaoRepository.findByIdAndEstudanteId(solicitacaoId, estudanteId)
+                .orElseThrow(() -> new SolicitacaoNaoEncontradaException("Solicitação não encontrada."));
+    }
 
     @Transactional(readOnly = true)
     public boolean existeSolicitacaoEmAbertoComAtividade(Long atividadeId) {
