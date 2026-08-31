@@ -9,17 +9,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import br.edu.ufape.backend.notificacao.contrato.EventoSolicitacao;
 import br.edu.ufape.backend.notificacao.model.TipoNotificacao;
-import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoResolver;
-import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoResolver.MensagemNotificacao;
+import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoFactory;
+import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoFactory.MensagemNotificacao;
 
-class MensagemNotificacaoResolverTest {
+class MensagemNotificacaoFactoryTest {
 
 	@Test
 	@DisplayName("Deve resolver mensagem de notificacao para evento SUBMETIDA")
 	void deveResolverMensagemParaEventoSubmetida() {
-		MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(EventoSolicitacao.SUBMETIDA, null);
+		MensagemNotificacao msg = MensagemNotificacaoFactory.criar("SUBMETIDA", null);
 
 		assertEquals(TipoNotificacao.SOLICITACAO_SUBMETIDA, msg.tipo());
 		assertEquals("Solicitação enviada", msg.titulo());
@@ -29,7 +28,7 @@ class MensagemNotificacaoResolverTest {
 	@Test
 	@DisplayName("Deve resolver mensagem de notificacao para evento EM_ANALISE")
 	void deveResolverMensagemParaEventoEmAnalise() {
-		MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(EventoSolicitacao.EM_ANALISE, null);
+		MensagemNotificacao msg = MensagemNotificacaoFactory.criar("EM_ANALISE", null);
 
 		assertEquals(TipoNotificacao.SOLICITACAO_EM_ANALISE, msg.tipo());
 		assertEquals("Solicitação em análise", msg.titulo());
@@ -40,7 +39,7 @@ class MensagemNotificacaoResolverTest {
 	@DisplayName("Deve resolver mensagem de notificacao para evento COM_PENDENCIAS interpolando justificativa")
 	void deveResolverMensagemParaEventoComPendencias() {
 		String justificativa = "Falta comprovante de carga horária.";
-		MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(EventoSolicitacao.COM_PENDENCIAS, justificativa);
+		MensagemNotificacao msg = MensagemNotificacaoFactory.criar("COM_PENDENCIAS", justificativa);
 
 		assertEquals(TipoNotificacao.SOLICITACAO_COM_PENDENCIAS, msg.tipo());
 		assertEquals("Solicitação com pendências", msg.titulo());
@@ -50,7 +49,7 @@ class MensagemNotificacaoResolverTest {
 	@Test
 	@DisplayName("Deve resolver mensagem de notificacao para evento APROVADA")
 	void deveResolverMensagemParaEventoAprovada() {
-		MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(EventoSolicitacao.APROVADA, null);
+		MensagemNotificacao msg = MensagemNotificacaoFactory.criar("APROVADA", null);
 
 		assertEquals(TipoNotificacao.SOLICITACAO_APROVADA, msg.tipo());
 		assertEquals("Solicitação aprovada", msg.titulo());
@@ -61,7 +60,7 @@ class MensagemNotificacaoResolverTest {
 	@DisplayName("Deve resolver mensagem de notificacao para evento REJEITADA interpolando justificativa")
 	void deveResolverMensagemParaEventoRejeitada() {
 		String justificativa = "Atividade fora do período letivo.";
-		MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(EventoSolicitacao.REJEITADA, justificativa);
+		MensagemNotificacao msg = MensagemNotificacaoFactory.criar("REJEITADA", justificativa);
 
 		assertEquals(TipoNotificacao.SOLICITACAO_REJEITADA, msg.tipo());
 		assertEquals("Solicitação rejeitada", msg.titulo());
@@ -74,7 +73,7 @@ class MensagemNotificacaoResolverTest {
 	@DisplayName("Deve lancar IllegalArgumentException para COM_PENDENCIAS com justificativa nula ou em branco")
 	void deveLancarExcecaoParaComPendenciasSemJustificativa(String justificativaInvalida) {
 		assertThrows(IllegalArgumentException.class,
-				() -> MensagemNotificacaoResolver.resolver(EventoSolicitacao.COM_PENDENCIAS, justificativaInvalida));
+				() -> MensagemNotificacaoFactory.criar("COM_PENDENCIAS", justificativaInvalida));
 	}
 
 	@ParameterizedTest
@@ -83,13 +82,14 @@ class MensagemNotificacaoResolverTest {
 	@DisplayName("Deve lancar IllegalArgumentException para REJEITADA com justificativa nula ou em branco")
 	void deveLancarExcecaoParaRejeitadaSemJustificativa(String justificativaInvalida) {
 		assertThrows(IllegalArgumentException.class,
-				() -> MensagemNotificacaoResolver.resolver(EventoSolicitacao.REJEITADA, justificativaInvalida));
+				() -> MensagemNotificacaoFactory.criar("REJEITADA", justificativaInvalida));
 	}
 
-	@Test
-	@DisplayName("Deve lancar IllegalArgumentException para evento nulo")
-	void deveLancarExcecaoParaEventoNulo() {
-		assertThrows(IllegalArgumentException.class, () -> MensagemNotificacaoResolver.resolver(null, "justificativa"));
+	@ParameterizedTest
+	@NullAndEmptySource
+	@ValueSource(strings = { "DESCONHECIDO", "submetida", "   " })
+	@DisplayName("Deve lancar IllegalArgumentException para status nulo ou desconhecido")
+	void deveLancarExcecaoParaStatusInvalido(String novoStatus) {
+		assertThrows(IllegalArgumentException.class, () -> MensagemNotificacaoFactory.criar(novoStatus, "justificativa"));
 	}
 }
-

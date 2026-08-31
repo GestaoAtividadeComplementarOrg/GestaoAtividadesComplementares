@@ -3,7 +3,6 @@ package br.edu.ufape.backend.notificacao.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ufape.backend.notificacao.exception.NotificacaoNaoEncontradaException;
@@ -20,7 +19,7 @@ public class NotificacaoService {
 		this.notificacaoRepository = notificacaoRepository;
 	}
 
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public Notificacao registrar(Long destinatarioId, TipoNotificacao tipo, String titulo, String mensagem,
 			Long solicitacaoId) {
 		Notificacao notificacao = new Notificacao(destinatarioId, tipo, titulo, mensagem, solicitacaoId);

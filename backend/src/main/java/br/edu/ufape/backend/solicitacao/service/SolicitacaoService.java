@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ufape.backend.atividade.contrato.AtividadeContrato;
 import br.edu.ufape.backend.atividade.dto.AtividadeResponseDTO;
-import br.edu.ufape.backend.notificacao.contrato.EventoSolicitacao;
 import br.edu.ufape.backend.notificacao.contrato.NotificacaoContrato;
 import br.edu.ufape.backend.solicitacao.dto.SolicitacaoResumoResponseDTO;
 import br.edu.ufape.backend.solicitacao.exception.EstudanteSemAtividadesException;
@@ -62,7 +61,7 @@ public class SolicitacaoService {
 
 		SolicitacaoValidacao solicitacaoSalva = solicitacaoValidacaoRepository.save(solicitacao);
 		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(), solicitacaoSalva.getId(),
-				resolverEvento(StatusSolicitacao.SUBMETIDA), null);
+				solicitacaoSalva.getStatus().name(), null);
 		return solicitacaoSalva;
 	}
 
@@ -89,18 +88,8 @@ public class SolicitacaoService {
 
 		SolicitacaoValidacao solicitacaoSalva = solicitacaoValidacaoRepository.save(solicitacao);
 		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(), solicitacaoSalva.getId(),
-				resolverEvento(novoStatus), justificativa);
+				novoStatus.name(), justificativa);
 		return solicitacaoSalva;
-	}
-
-	private EventoSolicitacao resolverEvento(StatusSolicitacao status) {
-		return switch (status) {
-			case SUBMETIDA -> EventoSolicitacao.SUBMETIDA;
-			case EM_ANALISE -> EventoSolicitacao.EM_ANALISE;
-			case COM_PENDENCIAS -> EventoSolicitacao.COM_PENDENCIAS;
-			case APROVADA -> EventoSolicitacao.APROVADA;
-			case REJEITADA -> EventoSolicitacao.REJEITADA;
-		};
 	}
 
 	// ---- Metodos do contrato publico ----

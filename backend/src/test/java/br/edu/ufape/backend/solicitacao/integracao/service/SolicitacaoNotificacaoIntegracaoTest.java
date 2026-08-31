@@ -3,17 +3,22 @@ package br.edu.ufape.backend.solicitacao.integracao.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.transaction.TestTransaction;
+import org.springframework.transaction.UnexpectedRollbackException;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ufape.backend.atividade.model.AtividadeComplementar;
@@ -27,6 +32,7 @@ import br.edu.ufape.backend.notificacao.repository.NotificacaoRepository;
 import br.edu.ufape.backend.solicitacao.model.DecisaoAvaliacao;
 import br.edu.ufape.backend.solicitacao.model.SolicitacaoValidacao;
 import br.edu.ufape.backend.solicitacao.model.StatusSolicitacao;
+import br.edu.ufape.backend.solicitacao.repository.SolicitacaoValidacaoRepository;
 import br.edu.ufape.backend.solicitacao.service.SolicitacaoService;
 import br.edu.ufape.backend.usuario.contrato.UsuarioContrato;
 import br.edu.ufape.backend.usuario.model.Avaliador;
@@ -40,6 +46,9 @@ class SolicitacaoNotificacaoIntegracaoTest {
 	private SolicitacaoService solicitacaoService;
 
 	@Autowired
+	private SolicitacaoValidacaoRepository solicitacaoRepository;
+
+	@MockitoSpyBean
 	private NotificacaoRepository notificacaoRepository;
 
 	@Autowired
@@ -48,23 +57,9 @@ class SolicitacaoNotificacaoIntegracaoTest {
 	@Autowired
 	private AtividadeComplementarRepository atividadeRepository;
 
-	private final List<Long> destinatariosIdsParaLimpeza = new ArrayList<>();
-
-	@AfterEach
-	void tearDown() {
-		for (Long destinatarioId : destinatariosIdsParaLimpeza) {
-			List<Notificacao> notifs = notificacaoRepository.findByDestinatarioIdOrderByDataCriacaoDesc(destinatarioId);
-			if (!notifs.isEmpty()) {
-				notificacaoRepository.deleteAll(notifs);
-			}
-		}
-		destinatariosIdsParaLimpeza.clear();
-	}
-
 	private Estudante criarEstudanteComAtividade(String email) {
 		Estudante estudante = (Estudante) usuarioContrato
 				.salvar(new Estudante("Estudante Notificacao", email, "senha123", "MATR-" + System.nanoTime(), "BCC"));
-		destinatariosIdsParaLimpeza.add(estudante.getId());
 
 		Certificado certificado = new Certificado("certificado.pdf", "application/pdf", 1024L,
 				"/uploads/certificado.pdf");
@@ -73,11 +68,60 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		atividadeRepository.save(atividade);
 
 		return estudante;
-	}
-
+}
 	private Avaliador criarAvaliador(String email) {
 		return (Avaliador) usuarioContrato
 				.salvar(new Avaliador("Avaliador Notificacao", email, "senha123", "REG-" + System.nanoTime(), "BCC"));
+	}
+
+	@Test
+	@DisplayName("Rollback da submissao deve desfazer a solicitacao e sua notificacao")
+	void deveReverterNotificacaoQuandoTransacaoDaSolicitacaoFalhar() {
+		Estudante estudante = criarEstudanteComAtividade("estudante.notif.rollback@ufape.edu.br");
+		SolicitacaoValidacao solicitacao = solicitacaoService.submeter(estudante.getId());
+		assertEquals(1, notificacaoRepository.countByDestinatarioIdAndLidaFalse(estudante.getId()));
+
+		TestTransaction.flagForRollback();
+		TestTransaction.end();
+		TestTransaction.start();
+
+		assertFalse(solicitacaoRepository.existsById(solicitacao.getId()));
+		assertTrue(notificacaoRepository.findByDestinatarioIdOrderByDataCriacaoDesc(estudante.getId()).isEmpty());
+	}
+
+	@Test
+	@DisplayName("Falha ao gravar notificacao da submissao deve abortar a transacao")
+	void deveReverterSubmissaoQuandoNotificacaoFalhar() {
+		Estudante estudante = criarEstudanteComAtividade("estudante.notif.falha.submeter@ufape.edu.br");
+		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao"))
+				.when(notificacaoRepository).save(any(Notificacao.class));
+
+		assertThrows(DataAccessResourceFailureException.class, () -> solicitacaoService.submeter(estudante.getId()));
+		TestTransaction.flagForCommit();
+		assertThrows(UnexpectedRollbackException.class, TestTransaction::end);
+		TestTransaction.start();
+
+		assertTrue(solicitacaoRepository.findByEstudanteId(estudante.getId()).isEmpty());
+		assertTrue(notificacaoRepository.findByDestinatarioIdOrderByDataCriacaoDesc(estudante.getId()).isEmpty());
+	}
+
+	@Test
+	@DisplayName("Falha ao gravar notificacao da avaliacao deve abortar a transacao")
+	void deveReverterAvaliacaoQuandoNotificacaoFalhar() {
+		Estudante estudante = criarEstudanteComAtividade("estudante.notif.falha.avaliar@ufape.edu.br");
+		Avaliador avaliador = criarAvaliador("avaliador.notif.falha.avaliar@ufape.edu.br");
+		SolicitacaoValidacao solicitacao = solicitacaoService.submeter(estudante.getId());
+		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao"))
+				.when(notificacaoRepository).save(any(Notificacao.class));
+
+		assertThrows(DataAccessResourceFailureException.class,
+				() -> solicitacaoService.avaliar(solicitacao.getId(), avaliador.getId(), DecisaoAvaliacao.APROVADA, null));
+		TestTransaction.flagForCommit();
+		assertThrows(UnexpectedRollbackException.class, TestTransaction::end);
+		TestTransaction.start();
+
+		assertFalse(solicitacaoRepository.existsById(solicitacao.getId()));
+		assertTrue(notificacaoRepository.findByDestinatarioIdOrderByDataCriacaoDesc(estudante.getId()).isEmpty());
 	}
 
 	@Test
@@ -149,4 +193,3 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		assertEquals(solicitacao.getId(), maisRecente.getSolicitacaoId());
 	}
 }
-
