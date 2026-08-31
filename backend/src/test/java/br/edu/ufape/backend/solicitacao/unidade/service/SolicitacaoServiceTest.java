@@ -30,6 +30,7 @@ import br.edu.ufape.backend.atividade.contrato.AtividadeContrato;
 import br.edu.ufape.backend.atividade.dto.AtividadeResponseDTO;
 import br.edu.ufape.backend.atividade.model.Categoria;
 import br.edu.ufape.backend.atividade.model.Natureza;
+import br.edu.ufape.backend.notificacao.contrato.EventoSolicitacao;
 import br.edu.ufape.backend.notificacao.contrato.NotificacaoContrato;
 import br.edu.ufape.backend.solicitacao.dto.SolicitacaoResumoResponseDTO;
 import br.edu.ufape.backend.solicitacao.exception.EstudanteSemAtividadesException;
@@ -425,7 +426,7 @@ class SolicitacaoServiceTest {
 		SolicitacaoValidacao resultado = solicitacaoService.submeter(estudanteId);
 
 		assertNotNull(resultado);
-		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(estudanteId, 50L, "SUBMETIDA", null);
+		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(estudanteId, 50L, EventoSolicitacao.SUBMETIDA, null);
 	}
 
 	@Test
@@ -437,7 +438,8 @@ class SolicitacaoServiceTest {
 
 		solicitacaoService.avaliar(10L, 99L, DecisaoAvaliacao.APROVADA, null);
 
-		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L, "APROVADA", null);
+		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L,
+				EventoSolicitacao.APROVADA, null);
 	}
 
 	@Test
@@ -449,8 +451,8 @@ class SolicitacaoServiceTest {
 
 		solicitacaoService.avaliar(10L, 99L, DecisaoAvaliacao.REJEITADA, "Documentacao incompleta");
 
-		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L, "REJEITADA",
-				"Documentacao incompleta");
+		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L,
+				EventoSolicitacao.REJEITADA, "Documentacao incompleta");
 	}
 
 	@Test
@@ -463,7 +465,7 @@ class SolicitacaoServiceTest {
 		solicitacaoService.avaliar(10L, 99L, DecisaoAvaliacao.COM_PENDENCIAS, "Falta assinatura");
 
 		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L,
-				"COM_PENDENCIAS", "Falta assinatura");
+				EventoSolicitacao.COM_PENDENCIAS, "Falta assinatura");
 	}
 
 	@Test

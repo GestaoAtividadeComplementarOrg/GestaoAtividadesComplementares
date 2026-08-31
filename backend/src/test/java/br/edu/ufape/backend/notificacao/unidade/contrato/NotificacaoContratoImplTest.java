@@ -1,5 +1,7 @@
 package br.edu.ufape.backend.notificacao.unidade.contrato;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import br.edu.ufape.backend.notificacao.contrato.EventoSolicitacao;
 import br.edu.ufape.backend.notificacao.contrato.NotificacaoContratoImpl;
-import br.edu.ufape.backend.notificacao.model.TipoNotificacao;
+import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoResolver;
+import br.edu.ufape.backend.notificacao.service.MensagemNotificacaoResolver.MensagemNotificacao;
 import br.edu.ufape.backend.notificacao.service.NotificacaoService;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,48 +31,32 @@ class NotificacaoContratoImplTest {
 	}
 
 	@Test
-	@DisplayName("Deve delegar criacao de notificacao de submissao para NotificacaoService")
-	void deveNotificarSubmissao() {
-		contrato.notificarMudancaStatusSolicitacao(1L, 10L, "SUBMETIDA", null);
+	@DisplayName("Deve delegar criacao de notificacao para NotificacaoService resolvendo a mensagem dinamicamente")
+	void deveDelegarCriacaoDeNotificacao() {
+		Long destinatarioId = 1L;
+		Long solicitacaoId = 10L;
+		EventoSolicitacao evento = EventoSolicitacao.SUBMETIDA;
 
-		verify(notificacaoService).registrar(1L, TipoNotificacao.SOLICITACAO_SUBMETIDA, "Solicitação enviada",
-				"Sua solicitação de validação foi enviada e aguarda análise.", 10L);
+		MensagemNotificacao esperada = MensagemNotificacaoResolver.resolver(evento, null);
+
+		contrato.notificarMudancaStatusSolicitacao(destinatarioId, solicitacaoId, evento, null);
+
+		verify(notificacaoService).registrar(destinatarioId, esperada.tipo(), esperada.titulo(), esperada.mensagem(),
+				solicitacaoId);
 	}
 
 	@Test
-	@DisplayName("Deve delegar criacao de notificacao de aprovacao para NotificacaoService")
-	void deveNotificarAprovacao() {
-		contrato.notificarMudancaStatusSolicitacao(1L, 10L, "APROVADA", null);
+	@DisplayName("Nao deve propagar excecao para o chamador quando NotificacaoService falhar")
+	void naoDevePropagarExcecaoQuandoServiceFalhar() {
+		Long destinatarioId = 1L;
+		Long solicitacaoId = 10L;
+		EventoSolicitacao evento = EventoSolicitacao.APROVADA;
+		MensagemNotificacao esperada = MensagemNotificacaoResolver.resolver(evento, null);
 
-		verify(notificacaoService).registrar(1L, TipoNotificacao.SOLICITACAO_APROVADA, "Solicitação aprovada",
-				"Sua solicitação de validação foi aprovada.", 10L);
-	}
+		doThrow(new RuntimeException("Falha de conexao com banco"))
+				.when(notificacaoService)
+				.registrar(destinatarioId, esperada.tipo(), esperada.titulo(), esperada.mensagem(), solicitacaoId);
 
-	@Test
-	@DisplayName("Deve delegar criacao de notificacao de pendencia para NotificacaoService")
-	void deveNotificarPendencias() {
-		contrato.notificarMudancaStatusSolicitacao(1L, 10L, "COM_PENDENCIAS", "Anexo corrompido");
-
-		verify(notificacaoService).registrar(1L, TipoNotificacao.SOLICITACAO_COM_PENDENCIAS,
-				"Solicitação com pendências", "Sua solicitação apresenta pendências: Anexo corrompido", 10L);
-	}
-
-	@Test
-	@DisplayName("Deve delegar criacao de notificacao de rejeicao para NotificacaoService")
-	void deveNotificarRejeicao() {
-		contrato.notificarMudancaStatusSolicitacao(1L, 10L, "REJEITADA", "Documento invalido");
-
-		verify(notificacaoService).registrar(1L, TipoNotificacao.SOLICITACAO_REJEITADA, "Solicitação rejeitada",
-				"Sua solicitação foi rejeitada: Documento invalido", 10L);
-	}
-
-	@Test
-	@DisplayName("Deve delegar criacao de notificacao de em analise para NotificacaoService")
-	void deveNotificarEmAnalise() {
-		contrato.notificarMudancaStatusSolicitacao(1L, 10L, "EM_ANALISE", null);
-
-		verify(notificacaoService).registrar(1L, TipoNotificacao.SOLICITACAO_EM_ANALISE, "Solicitação em análise",
-				"Sua solicitação de validação está sendo analisada.", 10L);
+		assertDoesNotThrow(() -> contrato.notificarMudancaStatusSolicitacao(destinatarioId, solicitacaoId, evento, null));
 	}
 }
-
