@@ -26,8 +26,16 @@ public class NotificacaoContratoImpl implements NotificacaoContrato {
 			MensagemNotificacao msg = MensagemNotificacaoResolver.resolver(evento, justificativa);
 			notificacaoService.registrar(destinatarioId, msg.tipo(), msg.titulo(), msg.mensagem(), solicitacaoId);
 		} catch (Exception e) {
-			log.error("Falha ao registrar notificação para destinatarioId: {}, solicitacaoId: {}, evento: {}. Erro: {}",
-					destinatarioId, solicitacaoId, evento, e.getMessage(), e);
+			// Notificacoes nao devem interromper o fluxo principal da operacao (submissao/avaliacao
+			// de solicitacao). O erro e registrado para acompanhamento, mantendo o comportamento
+			// fail-open: uma falha ao notificar nunca deve reverter a transacao do chamador.
+			log.error(
+					"Falha ao registrar notificacao para destinatarioId: {}, solicitacaoId: {}, evento: {}.",
+					destinatarioId,
+					solicitacaoId,
+					evento,
+					e
+			);
 		}
 	}
 }
