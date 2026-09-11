@@ -302,3 +302,55 @@ export function obterRelatorioCalculado(email: string): RelatorioAtividades {
     totalHorasGeral: totalHorasAcc + totalHorasAcex,
   };
 }
+
+const ATIVIDADES_MOCK_INICIAIS: Atividade[] = [
+  {
+    id: 1,
+    titulo: 'Monitoria Acadêmica de Algoritmos',
+    instituicaoResponsavel: 'UFAPE',
+    dataRealizacao: '2026-03-10',
+    cargaHorariaEmHoras: 30,
+    natureza: 'ACC',
+    categoria: 'ENSINO',
+    dataCadastro: '2026-03-11T08:00:00',
+    status: 'APROVADA',
+  },
+  {
+    id: 2,
+    titulo: 'Projeto de Extensão AgroTI Comunitária',
+    instituicaoResponsavel: 'UFAPE',
+    dataRealizacao: '2026-04-15',
+    cargaHorariaEmHoras: 60,
+    natureza: 'ACEX',
+    categoria: 'EXTENSAO',
+    dataCadastro: '2026-04-16T10:30:00',
+    status: 'PENDENTE',
+  },
+  {
+    id: 3,
+    titulo: 'Iniciação Científica PIBIC/CNPq',
+    instituicaoResponsavel: 'UFAPE / CNPq',
+    dataRealizacao: '2026-05-20',
+    cargaHorariaEmHoras: 45,
+    natureza: 'ACC',
+    categoria: 'PESQUISA',
+    dataCadastro: '2026-05-21T09:15:00',
+    status: 'APROVADA',
+  },
+  {
+    id: 4,
+    titulo: 'Seminário Regional de Engenharia de Software',
+    instituicaoResponsavel: 'SBC Pernambuco',
+    dataRealizacao: '2026-06-05',
+    cargaHorariaEmHoras: 15,
+    natureza: 'ACC',
+    categoria: 'EVENTOS',
+    dataCadastro: '2026-06-06T14:00:00',
+    status: 'PENDENTE',
+  },
+];
+
+export function resetarAtividadesMock(): void {
+  ATIVIDADES_MOCK.length = 0;
+  ATIVIDADES_MOCK.push(...ATIVIDADES_MOCK_INICIAIS.map((a) => ({ ...a })));
+}
