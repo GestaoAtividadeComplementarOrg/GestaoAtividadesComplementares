@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { NavbarComponent } from './navbar.component';
 import { AutenticacaoService } from '../../../autenticacao/autenticacao.service';
 
@@ -16,6 +18,7 @@ describe('NavbarComponent', () => {
 
   const montar = (perfil: string | null) => {
     TestBed.resetTestingModule();
+    
     authServiceMock = {
       perfilAtual: signal<string | null>(perfil),
       isAuthenticated: vi.fn().mockReturnValue(perfil !== null),
@@ -24,13 +27,22 @@ describe('NavbarComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [NavbarComponent],
-      providers: [provideRouter([]), { provide: AutenticacaoService, useValue: authServiceMock }],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AutenticacaoService, useValue: authServiceMock },
+      ],
     });
 
     fixture = TestBed.createComponent(NavbarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   };
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
 
   it('deve renderizar links de estudante para perfil ESTUDANTE', () => {
     montar('ESTUDANTE');
