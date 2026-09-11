@@ -437,8 +437,8 @@ class SolicitacaoServiceTest {
 
 		solicitacaoService.avaliar(10L, 99L, DecisaoAvaliacao.APROVADA, null);
 
-		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L,
-				"APROVADA", null);
+		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L, "APROVADA",
+				null);
 	}
 
 	@Test
@@ -450,8 +450,8 @@ class SolicitacaoServiceTest {
 
 		solicitacaoService.avaliar(10L, 99L, DecisaoAvaliacao.REJEITADA, "Documentacao incompleta");
 
-		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L,
-				"REJEITADA", "Documentacao incompleta");
+		verify(notificacaoContrato).notificarMudancaStatusSolicitacao(solicitacao.getEstudanteId(), 10L, "REJEITADA",
+				"Documentacao incompleta");
 	}
 
 	@Test

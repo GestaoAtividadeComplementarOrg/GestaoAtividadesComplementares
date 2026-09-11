@@ -68,7 +68,7 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		atividadeRepository.save(atividade);
 
 		return estudante;
-}
+	}
 	private Avaliador criarAvaliador(String email) {
 		return (Avaliador) usuarioContrato
 				.salvar(new Avaliador("Avaliador Notificacao", email, "senha123", "REG-" + System.nanoTime(), "BCC"));
@@ -93,8 +93,8 @@ class SolicitacaoNotificacaoIntegracaoTest {
 	@DisplayName("Falha ao gravar notificacao da submissao deve abortar a transacao")
 	void deveReverterSubmissaoQuandoNotificacaoFalhar() {
 		Estudante estudante = criarEstudanteComAtividade("estudante.notif.falha.submeter@ufape.edu.br");
-		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao"))
-				.when(notificacaoRepository).save(any(Notificacao.class));
+		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao")).when(notificacaoRepository)
+				.save(any(Notificacao.class));
 
 		assertThrows(DataAccessResourceFailureException.class, () -> solicitacaoService.submeter(estudante.getId()));
 		TestTransaction.flagForCommit();
@@ -111,11 +111,11 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		Estudante estudante = criarEstudanteComAtividade("estudante.notif.falha.avaliar@ufape.edu.br");
 		Avaliador avaliador = criarAvaliador("avaliador.notif.falha.avaliar@ufape.edu.br");
 		SolicitacaoValidacao solicitacao = solicitacaoService.submeter(estudante.getId());
-		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao"))
-				.when(notificacaoRepository).save(any(Notificacao.class));
+		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao")).when(notificacaoRepository)
+				.save(any(Notificacao.class));
 
-		assertThrows(DataAccessResourceFailureException.class,
-				() -> solicitacaoService.avaliar(solicitacao.getId(), avaliador.getId(), DecisaoAvaliacao.APROVADA, null));
+		assertThrows(DataAccessResourceFailureException.class, () -> solicitacaoService.avaliar(solicitacao.getId(),
+				avaliador.getId(), DecisaoAvaliacao.APROVADA, null));
 		TestTransaction.flagForCommit();
 		assertThrows(UnexpectedRollbackException.class, TestTransaction::end);
 		TestTransaction.start();

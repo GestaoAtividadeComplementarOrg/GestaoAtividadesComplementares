@@ -2,12 +2,11 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AtividadeService } from '../atividade.service';
 import { AtividadeEdicaoRequest } from './edicao-atividade.model';
 import { Atividade } from '../atividade.model';
 
-const FORMATOS_PERMITIDOS = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+const FORMATOS_PERMITIDOS = new Set(['application/pdf', 'image/png', 'image/jpeg']);
 const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024; // 5MB
 
 @Component({
@@ -21,7 +20,6 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly atividadeService = inject(AtividadeService);
-  private readonly sanitizer = inject(DomSanitizer);
 
   atividadeId: number | null = null;
   readonly carregandoDados = signal<boolean>(true);
@@ -40,7 +38,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
 
   // Estados do Modal
   readonly modalVisualizacaoAberto = signal<boolean>(false);
-  readonly urlPrevia = signal<SafeResourceUrl | null>(null);
+  readonly urlPrevia = signal<string | null>(null);
   readonly tipoPrevia = signal<'pdf' | 'imagem'>('pdf');
   readonly tituloPrevia = signal<string>('');
   readonly carregandoPrevia = signal<boolean>(false);
@@ -210,7 +208,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         this.urlObjetoCriada = url;
-        this.urlPrevia.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+        this.urlPrevia.set(url);
         this.tipoPrevia.set(blob.type.includes('image') ? 'imagem' : 'pdf');
         this.carregandoPrevia.set(false);
       },
@@ -228,7 +226,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
     this.erroPrevia.set(null);
     const url = URL.createObjectURL(file);
     this.urlObjetoCriada = url;
-    this.urlPrevia.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+    this.urlPrevia.set(url);
     this.tipoPrevia.set(file.type.includes('image') ? 'imagem' : 'pdf');
     this.tituloPrevia.set(file.name);
     this.carregandoPrevia.set(false);
@@ -290,7 +288,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
     this.erroArquivo.set(null);
     this.erroExtracao.set(null);
 
-    if (!FORMATOS_PERMITIDOS.includes(file.type)) {
+    if (!FORMATOS_PERMITIDOS.has(file.type)) {
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');
       this.arquivoAnexado.set(null);
       return false;

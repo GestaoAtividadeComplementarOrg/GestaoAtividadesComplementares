@@ -19,31 +19,16 @@ public final class MensagemNotificacaoFactory {
 			throw new IllegalArgumentException("Justificativa é obrigatória para o status " + novoStatus);
 		}
 		return switch (novoStatus) {
-			case "SUBMETIDA" -> new MensagemNotificacao(
-					TipoNotificacao.SOLICITACAO_SUBMETIDA,
-					"Solicitação enviada",
-					"Sua solicitação de validação foi enviada e aguarda análise."
-			);
-			case "EM_ANALISE" -> new MensagemNotificacao(
-					TipoNotificacao.SOLICITACAO_EM_ANALISE,
-					"Solicitação em análise",
-					"Sua solicitação de validação está sendo analisada."
-			);
-			case "COM_PENDENCIAS" -> new MensagemNotificacao(
-					TipoNotificacao.SOLICITACAO_COM_PENDENCIAS,
-					"Solicitação com pendências",
-					"Sua solicitação apresenta pendências: " + justificativa
-			);
-			case "APROVADA" -> new MensagemNotificacao(
-					TipoNotificacao.SOLICITACAO_APROVADA,
-					"Solicitação aprovada",
-					"Sua solicitação de validação foi aprovada."
-			);
-			case "REJEITADA" -> new MensagemNotificacao(
-					TipoNotificacao.SOLICITACAO_REJEITADA,
-					"Solicitação rejeitada",
-					"Sua solicitação foi rejeitada: " + justificativa
-			);
+			case "SUBMETIDA" -> new MensagemNotificacao(TipoNotificacao.SOLICITACAO_SUBMETIDA, "Solicitação enviada",
+					"Sua solicitação de validação foi enviada e aguarda análise.");
+			case "EM_ANALISE" -> new MensagemNotificacao(TipoNotificacao.SOLICITACAO_EM_ANALISE,
+					"Solicitação em análise", "Sua solicitação de validação está sendo analisada.");
+			case "COM_PENDENCIAS" -> new MensagemNotificacao(TipoNotificacao.SOLICITACAO_COM_PENDENCIAS,
+					"Solicitação com pendências", "Sua solicitação apresenta pendências: " + justificativa);
+			case "APROVADA" -> new MensagemNotificacao(TipoNotificacao.SOLICITACAO_APROVADA, "Solicitação aprovada",
+					"Sua solicitação de validação foi aprovada.");
+			case "REJEITADA" -> new MensagemNotificacao(TipoNotificacao.SOLICITACAO_REJEITADA, "Solicitação rejeitada",
+					"Sua solicitação foi rejeitada: " + justificativa);
 			default -> throw new IllegalArgumentException("Status desconhecido para notificação: " + novoStatus);
 		};
 	}

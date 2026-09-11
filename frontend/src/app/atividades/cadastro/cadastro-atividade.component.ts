@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { AtividadeService } from '../atividade.service';
 import { AtividadeRequest } from '../atividade.model';
 
-const FORMATOS_PERMITIDOS = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+const FORMATOS_PERMITIDOS = new Set(['application/pdf', 'image/png', 'image/jpeg']);
 
 const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
 
@@ -183,7 +183,7 @@ export class CadastroAtividadeComponent {
     // Tipo
     // ----------------------------------------------------------
 
-    if (!FORMATOS_PERMITIDOS.includes(file.type)) {
+    if (!FORMATOS_PERMITIDOS.has(file.type)) {
       this.arquivoAnexado.set(null);
 
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');

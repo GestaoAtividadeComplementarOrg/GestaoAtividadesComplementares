@@ -1,213 +1,237 @@
-import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
-import { of } from 'rxjs';
+import { HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { NOTIFICACOES_MOCK } from '../../notificacao/notificacao.mock';
-import { ContagemNaoLidas, Notificacao } from '../../notificacao/notificacao.model';
 import {
   ATIVIDADES_MOCK,
+  SOLICITACOES_MOCK,
   REGULAMENTOS_MOCK,
-  SOLICITACOES_AVALIADOR_MOCK,
+  CURSOS_MOCK,
+  USUARIOS_MOCK,
   gerarTokenMock,
   obterProgressoCalculado,
   obterRelatorioCalculado,
 } from '../mocks/mock-data';
-import { Atividade, Natureza, Categoria } from '../../atividades/atividade.model';
-import {
-  SolicitacaoAvaliadorDetalhe,
-  SolicitacaoAvaliadorResumo,
-} from '../../avaliacao/avaliacao.model';
-import { SolicitacaoDetalhe, SolicitacaoResumo } from '../../solicitacao/solicitacao.model';
+import { NOTIFICACOES_MOCK } from '../../notificacao/notificacao.mock';
+import { Atividade } from '../../atividades/atividade.model';
+import { SolicitacaoAvaliadorDetalhe } from '../../avaliacao/avaliacao.model';
 
-export const mockApiInterceptor: HttpInterceptorFn = (
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-) => {
-  const overrideRuntime = typeof window !== 'undefined' && localStorage.getItem('sgac_use_mocks');
+export const mockApiInterceptor: HttpInterceptorFn = (req, next) => {
+  const overrideRuntime =
+    typeof window !== 'undefined' ? localStorage.getItem('sgac_use_mocks') : null;
   const mocksAtivos = overrideRuntime !== null ? overrideRuntime === 'true' : environment.useMocks;
 
   if (!mocksAtivos) {
     return next(req);
   }
 
-  const url = req.url.split('?')[0].replace(/\/+$/, '');
-  const method = req.method;
+  const url = req.url.split('?')[0].replace(/\/$/, '').trimEnd();
+  const method = req.method.toUpperCase();
 
-  // 1. RELATÓRIOS (Processado antes para evitar colisão com /atividades)
-  if (url.endsWith('/relatorios/atividades') && method === 'GET') {
-    return of(
-      new HttpResponse({ status: 200, body: obterRelatorioCalculado('aluno1@ufape.edu.br') }),
-    ).pipe(delay(200));
-  }
+  return processarRotasMock(req, url, method) ?? next(req);
+};
 
-  // 2. AUTENTICAÇÃO (/auth)
+function processarRotasMock(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  return (
+    handleAuthMocks(req, url, method) ??
+    handleAtividadesMocks(req, url, method) ??
+    handleSolicitacoesMocks(req, url, method) ??
+    handleRegulamentosMocks(req, url, method) ??
+    handleCursosMocks(req, url, method) ??
+    handleUsuariosMocks(req, url, method) ??
+    handleRelatoriosMocks(req, url, method) ??
+    handleNotificacoesMocks(req, url, method)
+  );
+}
+
+// --- Handlers Específicos por Domínio ---
+
+function handleAuthMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
   if (url.endsWith('/auth/login') && method === 'POST') {
-    const body = req.body as { usuario?: string; senha?: string };
-    const email = body?.usuario?.toLowerCase() ?? '';
-    let role: 'ESTUDANTE' | 'AVALIADOR' | 'ADMINISTRADOR' = 'ESTUDANTE';
+    const body = (req.body ?? {}) as { usuario?: string; email?: string };
+    const email = (body?.usuario || body?.email || 'estudante@ufape.edu.br').toLowerCase();
+    const role = email.includes('avaliador')
+      ? 'AVALIADOR'
+      : email.includes('admin')
+        ? 'ADMINISTRADOR'
+        : 'ESTUDANTE';
 
-    if (email.includes('avaliador') || email.includes('professor')) {
-      role = 'AVALIADOR';
-    } else if (email.includes('admin')) {
-      role = 'ADMINISTRADOR';
-    }
-
-    const token = gerarTokenMock(email || 'usuario@ufape.edu.br', role);
-    return of(new HttpResponse({ status: 200, body: { token, tipo: 'Bearer' } })).pipe(delay(200));
+    return jsonResponse(200, {
+      token: gerarTokenMock(email, role),
+      tipo: 'Bearer',
+      usuario: { email, role },
+    });
   }
 
   if (url.endsWith('/auth/cadastro') && method === 'POST') {
-    const body = req.body as { nome?: string; email?: string };
-    return of(
-      new HttpResponse({
-        status: 201,
-        body: {
-          id: Date.now(),
-          nome: body?.nome ?? 'Novo Estudante',
-          email: body?.email ?? 'novo@ufape.edu.br',
-          role: 'ESTUDANTE',
-        },
-      }),
-    ).pipe(delay(250));
+    return jsonResponse(201, { message: 'Cadastro realizado com sucesso.', success: true });
   }
 
   if (url.endsWith('/auth/logout') && method === 'POST') {
-    return of(new HttpResponse({ status: 200, body: { success: true } })).pipe(delay(100));
+    return jsonResponse(200, { message: 'Sessão encerrada com sucesso.', success: true });
   }
 
-  // 3. ATIVIDADES & PROGRESSO (/atividades)
+  if (url.endsWith('/auth/me') && method === 'GET') {
+    return jsonResponse(200, {
+      id: '1',
+      nome: 'Usuário Mock',
+      email: 'estudante@ufape.edu.br',
+      role: 'ESTUDANTE',
+    });
+  }
+
+  return null;
+}
+
+function handleAtividadesMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/atividades')) return null;
+
   if (url.endsWith('/atividades/progresso') && method === 'GET') {
-    return of(new HttpResponse({ status: 200, body: obterProgressoCalculado() })).pipe(delay(150));
+    return jsonResponse(200, obterProgressoCalculado());
   }
 
   if (url.endsWith('/atividades/extrair-certificado') && method === 'POST') {
-    return of(
-      new HttpResponse({
-        status: 200,
-        body: {
-          titulo: 'Minicurso Prático de Inteligência Artificial e LLMs',
-          instituicaoResponsavel: 'UFAPE',
-          dataRealizacao: new Date().toISOString().split('T')[0],
-          cargaHoraria: 20,
-          natureza: 'ACC',
-          categoria: 'ENSINO',
-        },
-      }),
-    ).pipe(delay(350));
-  }
-
-  const matchParecer = url.match(/\/atividades\/(\d+)\/parecer$/);
-  if (matchParecer && method === 'GET') {
-    return of(
-      new HttpResponse({
-        status: 200,
-        body: {
-          id: Date.now(),
-          atividadeId: Number(matchParecer[1]),
-          naturezaSugerida: 'ACC',
-          categoriaSugerida: 'ENSINO',
-          cargaHorariaAproveitavel: 30,
-          artigoRegulamento: 'Art. 12 do Regulamento de ACC',
-          justificativaTecnica: 'Atividade em conformidade com o PPC.',
-          scoreConfianca: 0.95,
-          decisaoIA: 'DEFERIDO',
-          tempoProcessamentoMs: 120,
-        },
-      }),
-    ).pipe(delay(200));
-  }
-
-  const matchCertificado = url.match(/\/atividades\/(\d+)\/certificado$/);
-  if (matchCertificado && method === 'GET') {
-    const dummyBlob = new Blob(['%PDF-1.4 Mocked Document Content'], { type: 'application/pdf' });
-    return of(new HttpResponse({ status: 200, body: dummyBlob })).pipe(delay(100));
-  }
-
-  const matchAtividadeId = url.match(/\/atividades\/(\d+)$/);
-  if (matchAtividadeId && method === 'PUT') {
-    const id = Number(matchAtividadeId[1]);
-    const index = ATIVIDADES_MOCK.findIndex((a) => a.id === id);
-    if (index !== -1) {
-      return of(new HttpResponse({ status: 200, body: ATIVIDADES_MOCK[index] })).pipe(delay(200));
-    }
-    return of(new HttpResponse({ status: 200, body: { id, status: 'PENDENTE' } })).pipe(delay(200));
-  }
-
-  if (matchAtividadeId && method === 'DELETE') {
-    const id = Number(matchAtividadeId[1]);
-    const index = ATIVIDADES_MOCK.findIndex((a) => a.id === id);
-    if (index !== -1) {
-      ATIVIDADES_MOCK.splice(index, 1);
-    }
-    return of(new HttpResponse({ status: 204, body: null })).pipe(delay(150));
-  }
-
-  if (url.endsWith('/atividades') && method === 'POST') {
-    const novaAtividade: Atividade = {
-      id: Date.now(),
-      titulo: 'Atividade Registrada',
+    return jsonResponse(200, {
+      titulo: 'Curso de Extensão em Tecnologia',
       instituicaoResponsavel: 'UFAPE',
-      dataRealizacao: new Date().toISOString().split('T')[0],
-      cargaHorariaEmHoras: 20,
+      dataRealizacao: '2026-05-10',
+      cargaHoraria: 20,
       natureza: 'ACC',
       categoria: 'ENSINO',
-      dataCadastro: new Date().toISOString(),
-      status: 'PENDENTE',
+    });
+  }
+
+  if (url.includes('/parecer') && method === 'GET') {
+    const id = Number(url.split('/atividades/')[1]?.split('/parecer')[0]);
+    return jsonResponse(200, {
+      id: id || 1,
+      atividadeId: id || 1,
+      naturezaSugerida: 'ACC',
+      categoriaSugerida: 'ENSINO',
+      cargaHorariaAproveitavel: 30,
+      artigoRegulamento: 'Art. 12',
+      justificativaTecnica: 'Atividade compatível com os critérios do PPC.',
+      scoreConfianca: 0.95,
+      decisaoIA: 'DEFERIDO',
+      tempoProcessamentoMs: 350,
+    });
+  }
+
+  if (url.includes('/certificado') && method === 'GET') {
+    const blob = new Blob(['mock-pdf-content'], { type: 'application/pdf' });
+    return of(new HttpResponse({ status: 200, body: blob })).pipe(delay(200));
+  }
+
+  if (url.endsWith('/atividades')) {
+    if (method === 'GET') {
+      const natureza = req.params.get('natureza');
+      const categoria = req.params.get('categoria');
+      let lista = [...ATIVIDADES_MOCK];
+      if (natureza) lista = lista.filter((a) => a.natureza === natureza);
+      if (categoria) lista = lista.filter((a) => a.categoria === categoria);
+      return jsonResponse(200, lista);
+    }
+
+    if (method === 'POST') {
+      const bodyObj = extrairDadosCorpo(req);
+      const novaAtividade: Atividade = {
+        id: Date.now(),
+        titulo: String(bodyObj['titulo'] ?? 'Nova Atividade'),
+        instituicaoResponsavel: String(bodyObj['instituicaoResponsavel'] ?? 'UFAPE'),
+        dataRealizacao: String(bodyObj['dataRealizacao'] ?? new Date().toISOString().split('T')[0]),
+        cargaHorariaEmHoras: Number(bodyObj['cargaHoraria'] ?? 10),
+        natureza: String(bodyObj['natureza'] ?? 'ACC'),
+        categoria: String(bodyObj['categoria'] ?? 'ENSINO'),
+        dataCadastro: new Date().toISOString(),
+        status: 'PENDENTE',
+      };
+      ATIVIDADES_MOCK.push(novaAtividade);
+      return jsonResponse(201, novaAtividade);
+    }
+  }
+
+  const idSeg = url.split('/atividades/')[1];
+  return handleAtividadesIdRoutes(req, idSeg, method);
+}
+
+function handleAtividadesIdRoutes(
+  req: HttpRequest<unknown>,
+  idSeg: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  const idNum = Number(idSeg);
+  if (Number.isNaN(idNum)) return null;
+
+  const index = ATIVIDADES_MOCK.findIndex((a) => a.id === idNum);
+
+  if (method === 'GET') {
+    return index !== -1
+      ? jsonResponse(200, ATIVIDADES_MOCK[index])
+      : jsonResponse(404, { message: 'Atividade não encontrada.' });
+  }
+
+  if (method === 'PUT') {
+    if (index === -1) return jsonResponse(404, { message: 'Atividade não encontrada.' });
+    const bodyObj = extrairDadosCorpo(req);
+    ATIVIDADES_MOCK[index] = {
+      ...ATIVIDADES_MOCK[index],
+      titulo:
+        typeof bodyObj['titulo'] === 'string' ? bodyObj['titulo'] : ATIVIDADES_MOCK[index].titulo,
+      instituicaoResponsavel:
+        typeof bodyObj['instituicaoResponsavel'] === 'string'
+          ? bodyObj['instituicaoResponsavel']
+          : ATIVIDADES_MOCK[index].instituicaoResponsavel,
+      dataRealizacao:
+        typeof bodyObj['dataRealizacao'] === 'string'
+          ? bodyObj['dataRealizacao']
+          : ATIVIDADES_MOCK[index].dataRealizacao,
+      cargaHorariaEmHoras: Number(
+        bodyObj['cargaHoraria'] ?? ATIVIDADES_MOCK[index].cargaHorariaEmHoras,
+      ),
+      natureza:
+        typeof bodyObj['natureza'] === 'string'
+          ? bodyObj['natureza']
+          : ATIVIDADES_MOCK[index].natureza,
+      categoria:
+        typeof bodyObj['categoria'] === 'string'
+          ? bodyObj['categoria']
+          : ATIVIDADES_MOCK[index].categoria,
     };
-    ATIVIDADES_MOCK.unshift(novaAtividade);
-    return of(new HttpResponse({ status: 201, body: novaAtividade })).pipe(delay(250));
+    return jsonResponse(200, ATIVIDADES_MOCK[index]);
   }
 
-  if (url.endsWith('/atividades') && method === 'GET') {
-    const natureza = req.params.get('natureza');
-    const categoria = req.params.get('categoria');
-
-    let filtradas = [...ATIVIDADES_MOCK];
-    if (natureza) filtradas = filtradas.filter((a) => a.natureza === (natureza as Natureza));
-    if (categoria) filtradas = filtradas.filter((a) => a.categoria === (categoria as Categoria));
-
-    return of(new HttpResponse({ status: 200, body: filtradas })).pipe(delay(150));
+  if (method === 'DELETE') {
+    if (index === -1) return jsonResponse(404, { message: 'Atividade não encontrada.' });
+    ATIVIDADES_MOCK.splice(index, 1);
+    return jsonResponse(204, null);
   }
 
-  // 4. SOLICITAÇÕES E AVALIAÇÃO (/solicitacoes)
-  const matchAvaliacaoDecisao = url.match(/\/solicitacoes\/(\d+)\/avaliacao$/);
-  if (matchAvaliacaoDecisao && method === 'PATCH') {
-    const id = Number(matchAvaliacaoDecisao[1]);
-    const body = req.body as { decisao: string; justificativa?: string };
-    const item = SOLICITACOES_AVALIADOR_MOCK.find((s) => s.id === id);
-    if (item) {
-      item.status = body.decisao as any;
-      item.justificativa = body.justificativa;
-      item.dataAvaliacao = new Date().toISOString();
+  return null;
+}
 
-      if (body.decisao === 'APROVADA') {
-        item.itens.forEach((it) => {
-          const atv = ATIVIDADES_MOCK.find((a) => a.id === it.atividadeId);
-          if (atv) atv.status = 'APROVADA';
-        });
-      }
+function handleSolicitacoesMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/solicitacoes')) return null;
 
-      return of(new HttpResponse({ status: 200, body: item })).pipe(delay(200));
-    }
-    return of(
-      new HttpResponse({ status: 404, body: { message: 'Solicitação não encontrada.' } }),
-    ).pipe(delay(150));
-  }
-
-  if (matchAvaliacaoDecisao && method === 'GET') {
-    const id = Number(matchAvaliacaoDecisao[1]);
-    const item = SOLICITACOES_AVALIADOR_MOCK.find((s) => s.id === id);
-    if (item) {
-      return of(new HttpResponse({ status: 200, body: item })).pipe(delay(150));
-    }
-    return of(
-      new HttpResponse({ status: 404, body: { message: 'Solicitação não encontrada.' } }),
-    ).pipe(delay(150));
-  }
-
+  // 1. Rota de listagem de avaliação (Avaliador): GET /solicitacoes/avaliacao
   if (url.endsWith('/solicitacoes/avaliacao') && method === 'GET') {
-    const status = req.params.get('status');
-    let lista: SolicitacaoAvaliadorResumo[] = SOLICITACOES_AVALIADOR_MOCK.map((s) => ({
+    const statusFiltro = req.params.get('status');
+    let resumos = SOLICITACOES_MOCK.map((s) => ({
       id: s.id,
       estudanteNome: s.estudanteNome,
       dataSubmissao: s.dataSubmissao,
@@ -217,120 +241,248 @@ export const mockApiInterceptor: HttpInterceptorFn = (
       cargaHorariaTotal: s.cargaHorariaTotal,
     }));
 
-    if (status) {
-      lista = lista.filter((s) => s.status === status);
+    if (statusFiltro) {
+      resumos = resumos.filter((r) => r.status === statusFiltro);
     }
-    return of(new HttpResponse({ status: 200, body: lista })).pipe(delay(200));
+    return jsonResponse(200, resumos);
   }
 
-  const matchSolicitacaoEstudanteId = url.match(/\/solicitacoes\/(\d+)$/);
-  if (matchSolicitacaoEstudanteId && method === 'GET') {
-    const id = Number(matchSolicitacaoEstudanteId[1]);
-    const item = SOLICITACOES_AVALIADOR_MOCK.find((s) => s.id === id);
-    if (item) {
-      const detalheEstudante: SolicitacaoDetalhe = {
-        id: item.id,
-        status: item.status,
-        dataSubmissao: item.dataSubmissao,
-        dataAvaliacao: item.dataAvaliacao,
-        justificativa: item.justificativa,
-        totalAtividades: item.itens.length,
-        itens: item.itens,
+  // 2. Rotas de detalhe e ação de avaliação (Avaliador): /solicitacoes/:id/avaliacao
+  if (url.includes('/avaliacao')) {
+    const partes = url.split('/solicitacoes/')[1]?.split('/avaliacao')[0];
+    const idNum = Number(partes);
+    const index = SOLICITACOES_MOCK.findIndex((s) => s.id === idNum);
+
+    if (index === -1) {
+      return jsonResponse(404, { message: 'Solicitação não encontrada.' });
+    }
+
+    if (method === 'GET') {
+      return jsonResponse(200, SOLICITACOES_MOCK[index]);
+    }
+
+    if (method === 'PATCH') {
+      const body = (req.body ?? {}) as { decisao?: string; justificativa?: string };
+      const novaDecisao = (body.decisao as any) ?? 'APROVADA';
+      SOLICITACOES_MOCK[index] = {
+        ...SOLICITACOES_MOCK[index],
+        status: novaDecisao,
+        justificativa: body.justificativa?.trim() || undefined,
+        dataAvaliacao: new Date().toISOString(),
       };
-      return of(new HttpResponse({ status: 200, body: detalheEstudante })).pipe(delay(150));
+      return jsonResponse(200, SOLICITACOES_MOCK[index]);
     }
-    return of(
-      new HttpResponse({ status: 404, body: { message: 'Solicitação não encontrada.' } }),
-    ).pipe(delay(150));
   }
 
-  if (url.endsWith('/solicitacoes') && method === 'POST') {
-    const novaSolicitacao: SolicitacaoAvaliadorDetalhe = {
-      id: Date.now(),
-      estudanteNome: 'Lucas Gabriel Silva',
-      estudanteEmail: 'aluno1@ufape.edu.br',
-      dataSubmissao: new Date().toISOString(),
-      status: 'SUBMETIDA',
-      cargaHorariaTotal: ATIVIDADES_MOCK.reduce((acc, cur) => acc + cur.cargaHorariaEmHoras, 0),
-      itens: ATIVIDADES_MOCK.map((a) => ({
+  // 3. Rotas do Estudante: /solicitacoes
+  if (url.endsWith('/solicitacoes')) {
+    if (method === 'GET') {
+      const resumosEstudante = SOLICITACOES_MOCK.map((s) => ({
+        id: s.id,
+        status: s.status,
+        dataSubmissao: s.dataSubmissao,
+        dataAvaliacao: s.dataAvaliacao,
+        totalAtividades: s.itens.length,
+      }));
+      return jsonResponse(200, resumosEstudante);
+    }
+
+    if (method === 'POST') {
+      const temAberta = SOLICITACOES_MOCK.some(
+        (s) => s.status === 'SUBMETIDA' || s.status === 'EM_ANALISE',
+      );
+      if (temAberta) {
+        return jsonResponse(409, {
+          message:
+            'Você possui uma solicitação em aberto. Acompanhe o andamento antes de enviar outra.',
+        });
+      }
+
+      const itens = ATIVIDADES_MOCK.map((a) => ({
         atividadeId: a.id,
         titulo: a.titulo,
         cargaHoraria: a.cargaHorariaEmHoras,
         natureza: a.natureza,
-      })),
+      }));
+
+      if (itens.length === 0) {
+        return jsonResponse(422, {
+          message: 'Cadastre ao menos uma atividade antes de enviar o relatório para validação.',
+        });
+      }
+
+      const novaSolicitacao: SolicitacaoAvaliadorDetalhe = {
+        id: Date.now(),
+        estudanteNome: 'Estudante Teste UFAPE',
+        estudanteEmail: 'estudante@ufape.edu.br',
+        dataSubmissao: new Date().toISOString(),
+        status: 'SUBMETIDA',
+        cargaHorariaTotal: itens.reduce((acc, cur) => acc + cur.cargaHoraria, 0),
+        itens: itens,
+      };
+
+      SOLICITACOES_MOCK.push(novaSolicitacao);
+
+      const detalheEstudante = {
+        id: novaSolicitacao.id,
+        status: novaSolicitacao.status,
+        dataSubmissao: novaSolicitacao.dataSubmissao,
+        totalAtividades: novaSolicitacao.itens.length,
+        itens: novaSolicitacao.itens,
+      };
+
+      return jsonResponse(201, detalheEstudante);
+    }
+  }
+
+  // 4. Detalhe do Estudante: GET /solicitacoes/:id
+  const idEstudanteSeg = url.split('/solicitacoes/')[1];
+  if (idEstudanteSeg && !Number.isNaN(Number(idEstudanteSeg)) && method === 'GET') {
+    const idNum = Number(idEstudanteSeg);
+    const item = SOLICITACOES_MOCK.find((s) => s.id === idNum);
+    if (!item) {
+      return jsonResponse(404, { message: 'Solicitação não encontrada.' });
+    }
+    const detalheEstudante = {
+      id: item.id,
+      status: item.status,
+      dataSubmissao: item.dataSubmissao,
+      dataAvaliacao: item.dataAvaliacao,
+      totalAtividades: item.itens.length,
+      justificativa: item.justificativa,
+      itens: item.itens,
     };
-    SOLICITACOES_AVALIADOR_MOCK.unshift(novaSolicitacao);
-
-    const detalheEstudante: SolicitacaoDetalhe = {
-      id: novaSolicitacao.id,
-      status: novaSolicitacao.status,
-      dataSubmissao: novaSolicitacao.dataSubmissao,
-      totalAtividades: novaSolicitacao.itens.length,
-      itens: novaSolicitacao.itens,
-    };
-    return of(new HttpResponse({ status: 201, body: detalheEstudante })).pipe(delay(250));
+    return jsonResponse(200, detalheEstudante);
   }
 
-  if (url.endsWith('/solicitacoes') && method === 'GET') {
-    const listaEstudante: SolicitacaoResumo[] = SOLICITACOES_AVALIADOR_MOCK.map((s) => ({
-      id: s.id,
-      status: s.status,
-      dataSubmissao: s.dataSubmissao,
-      dataAvaliacao: s.dataAvaliacao,
-      totalAtividades: s.itens.length,
-    }));
-    return of(new HttpResponse({ status: 200, body: listaEstudante })).pipe(delay(150));
-  }
+  return null;
+}
 
-  // 5. REGULAMENTOS (/regulamentos)
-  if (url.endsWith('/regulamentos/ingerir') && method === 'POST') {
-    return of(
-      new HttpResponse({
-        status: 200,
-        body: {
-          nomeDocumento: 'Regulamento_PPC_2026.pdf',
-          totalChunksExtraidos: 4,
-          status: 'SUCESSO',
-          mensagem: 'Regulamento processado e vetorizado com sucesso via mock.',
-        },
-      }),
-    ).pipe(delay(300));
-  }
+function handleRegulamentosMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/regulamentos')) return null;
 
   if (url.endsWith('/regulamentos') && method === 'GET') {
-    return of(new HttpResponse({ status: 200, body: REGULAMENTOS_MOCK })).pipe(delay(150));
+    return jsonResponse(200, REGULAMENTOS_MOCK);
   }
 
-  // 6. NOTIFICAÇÕES (/notificacoes)
+  if (url.includes('/regulamentos/ingerir') && method === 'POST') {
+    return jsonResponse(200, {
+      nomeDocumento: 'regulamento.pdf',
+      totalChunksExtraidos: 4,
+      status: 'SUCESSO',
+      mensagem: '4 normas extraídas e vetorizadas com sucesso.',
+    });
+  }
+
+  return null;
+}
+
+function handleCursosMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/cursos')) return null;
+
+  if (method === 'GET') {
+    return jsonResponse(200, CURSOS_MOCK);
+  }
+
+  if (method === 'POST') {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const novoCurso = { id: Date.now(), ...body };
+    CURSOS_MOCK.push(novoCurso as any);
+    return jsonResponse(201, novoCurso);
+  }
+
+  return null;
+}
+
+function handleUsuariosMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/usuarios')) return null;
+
+  if (method === 'GET') {
+    return jsonResponse(200, USUARIOS_MOCK);
+  }
+
+  return null;
+}
+
+function handleRelatoriosMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (url.endsWith('/relatorios/atividades') && method === 'GET') {
+    return jsonResponse(200, obterRelatorioCalculado('estudante@ufape.edu.br'));
+  }
+
+  return null;
+}
+
+function handleNotificacoesMocks(
+  req: HttpRequest<unknown>,
+  url: string,
+  method: string,
+): Observable<HttpResponse<unknown>> | null {
+  if (!url.includes('/notificacoes')) return null;
+
   if (url.endsWith('/notificacoes/contagem-nao-lidas') && method === 'GET') {
     const naoLidas = NOTIFICACOES_MOCK.filter((n) => !n.lida).length;
-    const body: ContagemNaoLidas = { naoLidas };
-    return of(new HttpResponse({ status: 200, body })).pipe(delay(100));
-  }
-
-  if (url.endsWith('/notificacoes/leitura') && method === 'PATCH') {
-    NOTIFICACOES_MOCK.forEach((n) => (n.lida = true));
-    return of(new HttpResponse<void>({ status: 204 })).pipe(delay(150));
-  }
-
-  const matchItemLeitura = url.match(/\/notificacoes\/(\d+)\/leitura$/);
-  if (matchItemLeitura && method === 'PATCH') {
-    const id = Number(matchItemLeitura[1]);
-    const index = NOTIFICACOES_MOCK.findIndex((n) => n.id === id);
-    if (index !== -1) {
-      NOTIFICACOES_MOCK[index] = { ...NOTIFICACOES_MOCK[index], lida: true };
-      return of(new HttpResponse({ status: 200, body: NOTIFICACOES_MOCK[index] })).pipe(delay(100));
-    }
-    return of(new HttpResponse({ status: 404, body: { message: 'Notificação não encontrada.' } }));
+    return jsonResponse(200, { naoLidas });
   }
 
   if (url.endsWith('/notificacoes') && method === 'GET') {
     const apenasNaoLidas = req.params.get('apenasNaoLidas') === 'true';
-    const lista = apenasNaoLidas
-      ? NOTIFICACOES_MOCK.filter((n) => !n.lida)
-      : [...NOTIFICACOES_MOCK];
-    return of(new HttpResponse<Notificacao[]>({ status: 200, body: lista })).pipe(delay(150));
+    const lista = apenasNaoLidas ? NOTIFICACOES_MOCK.filter((n) => !n.lida) : NOTIFICACOES_MOCK;
+    return jsonResponse(200, lista);
   }
 
-  return next(req);
-};
+  if (url.includes('/leitura') && method === 'PATCH') {
+    const idSeg = url.split('/notificacoes/')[1]?.split('/leitura')[0];
+    if (idSeg && !Number.isNaN(Number(idSeg))) {
+      const idNum = Number(idSeg);
+      const item = NOTIFICACOES_MOCK.find((n) => n.id === idNum);
+      if (item) {
+        item.lida = true;
+        return jsonResponse(200, item);
+      }
+      return jsonResponse(404, { message: 'Notificação não encontrada.' });
+    }
+
+    NOTIFICACOES_MOCK.forEach((n) => (n.lida = true));
+    return jsonResponse(204, null);
+  }
+
+  return null;
+}
+
+// --- Funções Auxiliares ---
+
+function jsonResponse(
+  status: number,
+  body: unknown,
+  delayMs = 200,
+): Observable<HttpResponse<unknown>> {
+  return of(new HttpResponse({ status, body })).pipe(delay(delayMs));
+}
+
+function extrairDadosCorpo(req: HttpRequest<unknown>): Record<string, unknown> {
+  const bodyObj: Record<string, unknown> = {};
+  if (req.body instanceof FormData) {
+    req.body.forEach((val, key) => {
+      bodyObj[key] = val;
+    });
+  } else if (typeof req.body === 'object' && req.body !== null) {
+    Object.assign(bodyObj, req.body);
+  }
+  return bodyObj;
+}

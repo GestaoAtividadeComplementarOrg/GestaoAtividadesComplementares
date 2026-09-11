@@ -104,7 +104,7 @@ import { SolicitacaoResumo } from '../../solicitacao/solicitacao.model';
   `,
 })
 export class SituacaoSolicitacaoComponent implements OnInit {
-  private solicitacaoService = inject(SolicitacaoService);
+  private readonly solicitacaoService = inject(SolicitacaoService);
   solicitacaoMaisRecente = signal<SolicitacaoResumo | null>(null);
   carregando = signal<boolean>(true);
   erro = signal<boolean>(false);
@@ -113,8 +113,9 @@ export class SituacaoSolicitacaoComponent implements OnInit {
     this.solicitacaoService.listar().subscribe({
       next: (lista) => {
         if (lista && lista.length > 0) {
-          const maisRecente = lista.reduce((prev, current) =>
-            prev.id > current.id ? prev : current,
+          const maisRecente = lista.reduce(
+            (prev, current) => (prev.id > current.id ? prev : current),
+            lista[0],
           );
           this.solicitacaoMaisRecente.set(maisRecente);
         } else {

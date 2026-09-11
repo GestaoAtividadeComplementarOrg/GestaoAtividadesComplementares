@@ -4,7 +4,7 @@ import { SolicitacaoDetalhe, StatusSolicitacao } from '../solicitacao.model';
 import { classeStatus, rotuloStatus } from '../status-solicitacao';
 import { dataFormatada } from '../solicitacao.helpers';
 
-const STATUS_COM_JUSTIFICATIVA: StatusSolicitacao[] = ['REJEITADA', 'COM_PENDENCIAS'];
+const STATUS_COM_JUSTIFICATIVA = new Set<StatusSolicitacao>(['REJEITADA', 'COM_PENDENCIAS']);
 
 @Component({
   selector: 'app-detalhe-solicitacao',
@@ -18,7 +18,7 @@ export class DetalheSolicitacaoComponent {
   readonly mostraJustificativa = computed<boolean>(() => {
     const solicitacao = this.detalhe();
     const texto = solicitacao.justificativa?.trim() ?? '';
-    return STATUS_COM_JUSTIFICATIVA.includes(solicitacao.status) && texto.length > 0;
+    return STATUS_COM_JUSTIFICATIVA.has(solicitacao.status) && texto.length > 0;
   });
 
   readonly rotuloStatus = rotuloStatus;

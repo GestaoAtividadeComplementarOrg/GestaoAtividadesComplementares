@@ -58,9 +58,8 @@ class NotificacaoContratoImplTest {
 		MensagemNotificacao esperada = MensagemNotificacaoFactory.criar(novoStatus, null);
 
 		RuntimeException falha = new RuntimeException("Falha de conexao com banco");
-		doThrow(falha)
-				.when(notificacaoService)
-				.registrar(destinatarioId, esperada.tipo(), esperada.titulo(), esperada.mensagem(), solicitacaoId);
+		doThrow(falha).when(notificacaoService).registrar(destinatarioId, esperada.tipo(), esperada.titulo(),
+				esperada.mensagem(), solicitacaoId);
 
 		RuntimeException excecao = assertThrows(RuntimeException.class,
 				() -> contrato.notificarMudancaStatusSolicitacao(destinatarioId, solicitacaoId, novoStatus, null));
@@ -69,7 +68,7 @@ class NotificacaoContratoImplTest {
 
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = { "DESCONHECIDO", "submetida", "   " })
+	@ValueSource(strings = {"DESCONHECIDO", "submetida", "   "})
 	@DisplayName("Status invalido deve propagar erro sem registrar notificacao")
 	void deveRejeitarStatusInvalidoSemRegistrarNotificacao(String novoStatus) {
 		assertThrows(IllegalArgumentException.class,

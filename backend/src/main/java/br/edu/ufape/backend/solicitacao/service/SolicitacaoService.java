@@ -60,8 +60,8 @@ public class SolicitacaoService {
 				new ArrayList<>(itensSnapshot));
 
 		SolicitacaoValidacao solicitacaoSalva = solicitacaoValidacaoRepository.save(solicitacao);
-		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(), solicitacaoSalva.getId(),
-				solicitacaoSalva.getStatus().name(), null);
+		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(),
+				solicitacaoSalva.getId(), solicitacaoSalva.getStatus().name(), null);
 		return solicitacaoSalva;
 	}
 
@@ -87,8 +87,8 @@ public class SolicitacaoService {
 		solicitacao.setDataAvaliacao(LocalDateTime.now(ZoneId.of("America/Recife")));
 
 		SolicitacaoValidacao solicitacaoSalva = solicitacaoValidacaoRepository.save(solicitacao);
-		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(), solicitacaoSalva.getId(),
-				novoStatus.name(), justificativa);
+		notificacaoContrato.notificarMudancaStatusSolicitacao(solicitacaoSalva.getEstudanteId(),
+				solicitacaoSalva.getId(), novoStatus.name(), justificativa);
 		return solicitacaoSalva;
 	}
 

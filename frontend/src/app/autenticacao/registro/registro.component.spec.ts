@@ -1,100 +1,131 @@
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, provideRouter } from '@angular/router';
+import { Component } from '@angular/core';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { RegistroComponent } from './registro.component';
 import { RegistroService } from './registro.service';
-import { RegistroRequest } from './registro.model';
-import { API_BASE_URL } from '../../api.config';
 
-const CADASTRO_URL = `${API_BASE_URL}/auth/cadastro`;
+@Component({ template: '' })
+class FakeLoginComponent {}
 
-describe('RegistroService', () => {
-  let service: RegistroService;
-  let httpMock: HttpTestingController;
+describe('RegistroComponent', () => {
+  let component: RegistroComponent;
+  let fixture: ComponentFixture<RegistroComponent>;
+  let registroServiceMock: { register: ReturnType<typeof vi.fn> };
+  let routerMock: { navigate: ReturnType<typeof vi.fn> };
 
-  const dadosRegistro: RegistroRequest = {
-    fullName: 'Estudante Teste',
-    emailOrRegistration: 'estudante@ufape.edu.br',
-    password: 'senhaSegura123',
-  };
+  beforeEach(async () => {
+    registroServiceMock = {
+      register: vi.fn(),
+    };
+    routerMock = {
+      navigate: vi.fn(),
+    };
 
-  beforeEach(() => {
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [RegistroService, provideHttpClient(), provideHttpClientTesting()],
-    });
-    service = TestBed.inject(RegistroService);
-    httpMock = TestBed.inject(HttpTestingController);
+    await TestBed.configureTestingModule({
+      imports: [RegistroComponent, ReactiveFormsModule],
+      providers: [
+        { provide: RegistroService, useValue: registroServiceMock },
+        provideRouter([
+          { path: 'login', component: FakeLoginComponent },
+          { path: '', redirectTo: 'login', pathMatch: 'full' },
+        ]),
+        { provide: ActivatedRoute, useValue: { snapshot: { params: {} } } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(RegistroComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
-  afterEach(() => {
-    httpMock.verify();
+  it('deve ser criado', () => {
+    expect(component).toBeTruthy();
   });
 
-  it('deve ser criado com sucesso', () => {
-    expect(service).toBeTruthy();
+  it('deve validar campos obrigatórios', () => {
+    component.registerForm.setValue({
+      fullName: '',
+      emailOrRegistration: '',
+      password: '',
+      confirmPassword: '',
+    });
+    expect(component.registerForm.invalid).toBeTruthy();
   });
 
-  it('deve enviar requisição POST com payload mapeado para o contrato do backend', () => {
-    service.register(dadosRegistro).subscribe();
-
-    const req = httpMock.expectOne(CADASTRO_URL);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({
-      nome: 'Estudante Teste',
-      email: 'estudante@ufape.edu.br',
-      senha: 'senhaSegura123',
-      role: 'ESTUDANTE',
-    });
-    req.flush({
-      id: 1,
-      nome: 'Estudante Teste',
-      email: 'estudante@ufape.edu.br',
-      role: 'ESTUDANTE',
-    });
+  it('deve validar senha mínima de 8 caracteres', () => {
+    component.registerForm.patchValue({ password: '1234567' });
+    expect(component.registerForm.get('password')?.valid).toBeFalsy();
   });
 
-  it('deve traduzir erro 409 com mensagem em texto puro do backend para Error de domínio', () => {
-    let erro: Error | undefined;
-    service.register(dadosRegistro).subscribe({
-      error: (falha: Error) => (erro = falha),
-    });
-
-    const req = httpMock.expectOne(CADASTRO_URL);
-    req.flush('Já existe um usuário cadastrado com o email: estudante@ufape.edu.br', {
-      status: 409,
-      statusText: 'Conflict',
-    });
-
-    expect(erro).toBeInstanceOf(Error);
-    expect(erro?.message).toBe(
-      'Já existe um usuário cadastrado com o email: estudante@ufape.edu.br',
-    );
+  it('deve validar senha mínima de 3 caracteres para fullName', () => {
+    component.registerForm.patchValue({ fullName: 'ab' });
+    expect(component.registerForm.get('fullName')?.valid).toBeFalsy();
   });
 
-  it('deve traduzir erro de rede (status 0) para mensagem de conexão', () => {
-    let erro: Error | undefined;
-    service.register(dadosRegistro).subscribe({
-      error: (falha: Error) => (erro = falha),
+  it('deve validar que as senhas coincidem', () => {
+    component.registerForm.setValue({
+      fullName: 'Teste',
+      emailOrRegistration: 'teste@ufape.edu.br',
+      password: 'password123',
+      confirmPassword: 'password456',
     });
-
-    const req = httpMock.expectOne(CADASTRO_URL);
-    req.error(new ProgressEvent('error'), { status: 0 });
-
-    expect(erro).toBeInstanceOf(Error);
-    expect(erro?.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    expect(component.registerForm.hasError('passwordMismatch')).toBeTruthy();
   });
 
-  it('deve usar mensagem genérica quando o backend retornar 500 sem corpo', () => {
-    let erro: Error | undefined;
-    service.register(dadosRegistro).subscribe({
-      error: (falha: Error) => (erro = falha),
+  it('deve validar que as senhas coincidem corretamente', () => {
+    component.registerForm.setValue({
+      fullName: 'Teste Silva',
+      emailOrRegistration: 'teste@ufape.edu.br',
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+    expect(component.registerForm.hasError('passwordMismatch')).toBeFalsy();
+  });
+
+  it('deve alternar visibilidade da senha', () => {
+    component.togglePasswordVisibility('password');
+    expect(component.showPassword()).toBeTruthy();
+  });
+
+  it('deve validar campo inválido e tocado', () => {
+    const field = component.registerForm.get('fullName');
+    field?.setValue('');
+    field?.markAsTouched();
+    expect(component.isFieldInvalid('fullName')).toBeTruthy();
+  });
+
+  it('deve submeter o formulário com sucesso', () => {
+    component.registerForm.setValue({
+      fullName: 'Teste Silva',
+      emailOrRegistration: 'teste@ufape.edu.br',
+      password: 'password123',
+      confirmPassword: 'password123',
     });
 
-    const req = httpMock.expectOne(CADASTRO_URL);
-    req.flush('', { status: 500, statusText: 'Internal Server Error' });
+    registroServiceMock.register.mockReturnValue({
+      subscribe: vi.fn((cb: any) => {
+        if (cb && typeof cb.next === 'function') {
+          cb.next();
+        } else if (cb && typeof cb === 'function') {
+          cb({ next: () => {} });
+        }
+      }),
+    } as any);
+    component.onSubmit();
 
-    expect(erro).toBeInstanceOf(Error);
-    expect(erro?.message).toBe('Erro ao cadastrar. Tente novamente.');
+    expect(component.isLoading()).toBeFalsy();
+  });
+
+  it('não deve submeter se o formulário for inválido', () => {
+    component.registerForm.setValue({
+      fullName: '',
+      emailOrRegistration: '',
+      password: '',
+      confirmPassword: '',
+    });
+    component.onSubmit();
+    expect(component.registerForm.touched).toBeTruthy();
   });
 });

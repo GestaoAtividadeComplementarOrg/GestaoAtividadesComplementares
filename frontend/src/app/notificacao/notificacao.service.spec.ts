@@ -104,4 +104,59 @@ describe('NotificacaoService', () => {
     httpMock.expectOne(url).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(erro?.message).toBe('Sessão expirada. Faça login novamente.');
   });
+
+  it.each([
+    { status: 401, errorText: 'Sessão expirada. Faça login novamente.' },
+    { status: 403, errorText: 'Acesso negado às notificações.' },
+    { status: 404, errorText: 'Notificação não encontrada.' },
+  ])('deve traduzir status $status corretamente', ({ status, errorText }) => {
+    let erro: Error | undefined;
+    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+    httpMock.expectOne(url).flush(null, { status, statusText: 'Error' });
+    expect(erro?.message).toBe(errorText);
+  });
+
+  it('deve traduzir 404 com mensagem do backend', () => {
+    let erro: Error | undefined;
+    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock
+      .expectOne(url)
+      .flush({ message: 'Notificação removida' }, { status: 404, statusText: 'Not Found' });
+    expect(erro?.message).toBe('Notificação removida');
+  });
+
+  it('deve traduzir status 0 para falha de conexão', () => {
+    let erro: Error | undefined;
+    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(url).error(new ProgressEvent('error'), { status: 0 });
+    expect(erro?.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+  });
+
+  it('deve traduzir erro genérico com mensagem do backend', () => {
+    let erro: Error | undefined;
+    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock
+      .expectOne(url)
+      .flush({ message: 'Erro interno' }, { status: 500, statusText: 'Internal Server Error' });
+    expect(erro?.message).toBe('Erro interno');
+  });
+
+  it('deve traduzir erro genérico sem mensagem', () => {
+    let erro: Error | undefined;
+    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(url).flush(null, { status: 500, statusText: 'Internal Server Error' });
+    expect(erro?.message).toBe('Não foi possível carregar as notificações. Tente novamente.');
+  });
+
+  it('deve lidar com resposta null do backend retornando array vazio', () => {
+    let recebido: Notificacao[] | undefined;
+    service.listar().subscribe((res) => (recebido = res));
+
+    httpMock.expectOne(url).flush(null);
+    expect(recebido).toHaveLength(0);
+  });
 });

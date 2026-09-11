@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.CONFLICT)
 public class AtividadeVinculadaASolicitacaoException extends RuntimeException {
-    public AtividadeVinculadaASolicitacaoException() {
-        super("a atividade faz parte de uma solicitação em análise");
-    }
+	public AtividadeVinculadaASolicitacaoException() {
+		super("a atividade faz parte de uma solicitação em análise");
+	}
 }

@@ -88,16 +88,18 @@
           </h2>
           <form [formGroup]="formCurso" (ngSubmit)="salvar()" class="space-y-3 text-xs">
             <div>
-              <label class="block font-semibold mb-1">Nome do Curso *</label>
+              <label for="nome-curso" class="block font-semibold mb-1">Nome do Curso *</label>
               <input
+                id="nome-curso"
                 formControlName="nome"
                 class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
                 placeholder="Ex: Bacharelado em Agronomia"
               />
             </div>
             <div>
-              <label class="block font-semibold mb-1">Código / Sigla *</label>
+              <label for="codigo-curso" class="block font-semibold mb-1">Código / Sigla *</label>
               <input
+                id="codigo-curso"
                 formControlName="codigo"
                 class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
                 placeholder="Ex: AGRON"
@@ -105,16 +107,22 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-semibold mb-1">Meta ACC (Horas) *</label>
+                <label for="horas-acc-curso" class="block font-semibold mb-1"
+                  >Meta ACC (Horas) *</label
+                >
                 <input
+                  id="horas-acc-curso"
                   formControlName="horasAccExigidas"
                   type="number"
                   class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
                 />
               </div>
               <div>
-                <label class="block font-semibold mb-1">Meta ACEX (Horas) *</label>
+                <label for="horas-acex-curso" class="block font-semibold mb-1"
+                  >Meta ACEX (Horas) *</label
+                >
                 <input
+                  id="horas-acex-curso"
                   formControlName="horasAcexExigidas"
                   type="number"
                   class="w-full border rounded-lg p-2 bg-[#f8f9fa]"

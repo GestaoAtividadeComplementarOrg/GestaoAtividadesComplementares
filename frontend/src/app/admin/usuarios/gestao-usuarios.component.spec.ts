@@ -59,4 +59,28 @@ describe('GestaoUsuariosComponent', () => {
     expect(adminServiceSpy.alternarStatusUsuario).toHaveBeenCalledWith(1);
     expect(component.usuarios()[0].ativo).toBe(false);
   });
+
+  it('deve cadastrar usuário institucional', () => {
+    component.formUsuario.setValue({
+      nome: 'Novo Usuario',
+      email: 'novo@ufape.edu.br',
+      senha: 'senha1234',
+      role: 'AVALIADOR',
+      registro: '',
+      areaAtuacao: '',
+      setor: '',
+      nivelAcesso: 'TOTAL',
+    });
+    adminServiceSpy.cadastrarUsuarioInstitucional.mockReturnValue(
+      of({ ...usuariosMock[0], id: 2 }),
+    );
+    component.salvarUsuario();
+    expect(adminServiceSpy.cadastrarUsuarioInstitucional).toHaveBeenCalled();
+  });
+
+  it('não deve salvar com formulário inválido', () => {
+    component.formUsuario.reset();
+    component.salvarUsuario();
+    expect(adminServiceSpy.cadastrarUsuarioInstitucional).not.toHaveBeenCalled();
+  });
 });

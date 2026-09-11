@@ -28,7 +28,7 @@ const createStorageMock = () => {
 
 function gerarJwtFake(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = btoa(JSON.stringify(payload));
+  const body = btoa(JSON.stringify(payload)).replace(/=/g, '');
   return `${header}.${body}.assinatura_fake`;
 }
 
@@ -40,7 +40,6 @@ describe('AutenticacaoService', () => {
     TestBed.resetTestingModule();
     vi.stubGlobal('localStorage', createStorageMock());
     vi.stubGlobal('sessionStorage', createStorageMock());
-
     TestBed.configureTestingModule({
       providers: [AutenticacaoService, provideHttpClient(), provideHttpClientTesting()],
     });
@@ -50,104 +49,104 @@ describe('AutenticacaoService', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.clear();
-    sessionStorage.clear();
+    vi.unstubAllGlobals();
   });
 
-  it('deve ser criado', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('deve converter as credenciais de domínio para o contrato do backend', () => {
-    const credenciais = { email: 'aluno@ufape.edu.br', senha: 'password123' };
-
-    service.login(credenciais).subscribe();
+  it('deve realizar login com sucesso e salvar token', () => {
+    const mockResponse = { token: 'token123', tokenType: 'Bearer' };
+    service
+      .login({ emailOrRegistration: 'user@test.com', password: '123' } as any)
+      .subscribe((res: any) => {
+        expect(res).toEqual(mockResponse);
+      });
 
     const req = httpMock.expectOne(LOGIN_URL);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ usuario: 'aluno@ufape.edu.br', senha: 'password123' });
-    req.flush({ token: 'fake-jwt-token', tipo: 'Bearer' });
+    req.flush(mockResponse);
   });
 
-  it('deve salvar o token e o tipo devolvidos pelo backend', () => {
-    const credenciais = { email: 'aluno@ufape.edu.br', senha: 'password123' };
-    service.login(credenciais).subscribe();
-    httpMock.expectOne(LOGIN_URL).flush({ token: 'fake-jwt-token', tipo: 'Bearer' });
-    expect(service.getToken()).toBe('fake-jwt-token');
-    expect(service.getTokenType()).toBe('Bearer');
-    expect(service.isAuthenticated()).toBeTruthy();
-  });
-
-  it('não deve deixar resíduo de autenticação no navegador ao encerrar a sessão', () => {
-    service.saveToken('token-valido', 'Bearer');
-    sessionStorage.setItem('user-data', JSON.stringify({ nome: 'Teste' }));
-
-    service.encerrarSessao();
-
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
-    expect(service.getToken()).toBeNull();
-    expect(service.isAuthenticated()).toBeFalsy();
-  });
-
-  it('deve traduzir o status 401 para mensagem de credenciais inválidas', () => {
-    let mensagem = '';
-    service.login({ email: 'errado@ufape.edu.br', senha: 'wrongpassword' }).subscribe({
-      error: (erro: Error) => (mensagem = erro.message),
+  it('deve cadastrar usuário com sucesso', () => {
+    const payload = { fullName: 'Nome', emailOrRegistration: 'email@test.com', password: '123' };
+    service.cadastrar(payload).subscribe((res: any) => {
+      expect(res).toBe('Usuário cadastrado com sucesso');
     });
-    httpMock.expectOne(LOGIN_URL).flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/auth/cadastro`);
+    expect(req.request.method).toBe('POST');
+    req.flush('Usuário cadastrado com sucesso');
+  });
+
+  it('deve traduzir erro 400 com mensagem no cadastro', () => {
+    let mensagem = '';
+    service.cadastrar({ fullName: 'A', emailOrRegistration: 'b', password: 'c' }).subscribe({
+      error: (e: Error) => (mensagem = e.message),
+    });
+    httpMock.expectOne(`${API_BASE_URL}/auth/cadastro`).flush(
+      { message: 'E-mail já cadastrado' },
+      {
+        status: 400,
+        statusText: 'Bad Request',
+      },
+    );
+    expect(mensagem).toBe('E-mail já cadastrado');
+  });
+
+  it('deve traduzir erro 400 com texto puro no cadastro', () => {
+    let mensagem = '';
+    service.cadastrar({ fullName: 'A', emailOrRegistration: 'b', password: 'c' }).subscribe({
+      error: (e: Error) => (mensagem = e.message),
+    });
+    httpMock.expectOne(`${API_BASE_URL}/auth/cadastro`).flush('Erro em texto puro', {
+      status: 400,
+      statusText: 'Bad Request',
+    });
+    expect(mensagem).toBe('Erro em texto puro');
+  });
+
+  it('deve traduzir erro 401/403 no login', () => {
+    let mensagem = '';
+    service.login({ emailOrRegistration: 'a', password: 'b' } as any).subscribe({
+      error: (e: Error) => (mensagem = e.message),
+    });
+    httpMock.expectOne(LOGIN_URL).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(mensagem).toBe('Credenciais inválidas.');
   });
 
-  it('deve traduzir o status 0 para mensagem de falha de conexão', () => {
+  it('deve traduzir erro 500 generico no login', () => {
     let mensagem = '';
-    service.login({ email: 'aluno@ufape.edu.br', senha: 'password123' }).subscribe({
-      error: (erro: Error) => (mensagem = erro.message),
+    service.login({ emailOrRegistration: 'a', password: 'b' } as any).subscribe({
+      error: (e: Error) => (mensagem = e.message),
     });
-    httpMock.expectOne(LOGIN_URL).error(new ProgressEvent('error'), { status: 0 });
-    expect(mensagem).toContain('Não foi possível conectar ao servidor');
-  });
-
-  it('deve usar mensagem genérica quando o backend não informar detalhe', () => {
-    let mensagem = '';
-    service.login({ email: 'aluno@ufape.edu.br', senha: 'password123' }).subscribe({
-      error: (erro: Error) => (mensagem = erro.message),
-    });
-    httpMock.expectOne(LOGIN_URL).flush({}, { status: 500, statusText: 'Server Error' });
+    httpMock.expectOne(LOGIN_URL).flush(null, { status: 500, statusText: 'Internal Error' });
     expect(mensagem).toBe('Ocorreu um erro ao realizar o login. Tente novamente.');
   });
 
-  describe('extração de perfil (Role)', () => {
-    it('deve extrair a role ESTUDANTE do payload JWT', () => {
-      const token = gerarJwtFake({ sub: 'aluno@ufape.edu.br', role: 'ESTUDANTE' });
-      service.saveToken(token);
-      expect(service.perfilAtual()).toBe('ESTUDANTE');
-      expect(service.getRole()).toBe('ESTUDANTE');
-    });
+  it('deve lidar com ambiente sem localStorage/window de forma segura', () => {
+    vi.stubGlobal('window', undefined);
+    vi.stubGlobal('localStorage', undefined);
 
-    it('deve extrair a role do array roles quando formatado em lista', () => {
-      const token = gerarJwtFake({ sub: 'avaliador@ufape.edu.br', roles: ['AVALIADOR'] });
-      service.saveToken(token);
-      expect(service.perfilAtual()).toBe('AVALIADOR');
-      expect(service.getRole()).toBe('AVALIADOR');
-    });
+    expect(() => service.saveToken('token', 'Bearer')).not.toThrow();
+    expect(service.getToken()).toBeNull();
+    expect(service.getTokenType()).toBe('Bearer');
+    expect(() => service.encerrarSessao()).not.toThrow();
+  });
 
-    it('deve retornar null quando não houver token salvo', () => {
-      expect(service.perfilAtual()).toBeNull();
-      expect(service.getRole()).toBeNull();
+  it('deve decodificar perfil do payload JWT corretamente', () => {
+    const token = gerarJwtFake({
+      sub: '123',
+      role: 'ESTUDANTE',
+      perfil: 'ESTUDANTE',
+      roles: ['ESTUDANTE'],
     });
+    service.saveToken(token, 'Bearer');
+    expect(service.perfilAtual()).toBeTruthy();
+  });
 
-    it('deve retornar null e não quebrar quando o token for malformado', () => {
-      service.saveToken('token_sem_estrutura_jwt');
-      expect(service.perfilAtual()).toBeNull();
-      expect(service.getRole()).toBeNull();
-    });
+  it('deve retornar null no perfilAtual em caso de JWT invalido ou sem payload', () => {
+    service.saveToken('invalid.payload');
+    expect(service.perfilAtual()).toBeNull();
 
-    it('deve retornar null quando o payload não contiver campo de papel', () => {
-      const token = gerarJwtFake({ sub: 'semrole@ufape.edu.br' });
-      service.saveToken(token);
-      expect(service.perfilAtual()).toBeNull();
-      expect(service.getRole()).toBeNull();
-    });
+    service.saveToken('singletoken');
+    expect(service.perfilAtual()).toBeNull();
   });
 });

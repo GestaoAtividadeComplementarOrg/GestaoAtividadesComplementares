@@ -101,6 +101,42 @@ else
     echo "Aviso: lcov.info não encontrado em $FRONT_DIR/coverage."
 fi
 
+
+# ============================================================
+# 6. SONARCLOUD FRONTEND
+# ============================================================
+
+echo "=================================================="
+echo " [6/7] Analisando e enviando para SonarCloud..."
+echo "=================================================="
+
+if [ -z "${SONAR_TOKEN:-}" ]; then
+
+    echo ""
+    echo "Aviso: SONAR_TOKEN não está definido."
+    echo "Análise do SonarCloud será ignorada."
+
+else
+
+    # --- Análise Frontend ---
+    echo ""
+    echo "Enviando Frontend ao SonarCloud..."
+    cd "$FRONT_DIR"
+
+    npx sonar-scanner \
+        -Dsonar.host.url=https://sonarcloud.io \
+        -Dsonar.organization=sgac-gestaoatividadecomplementarorg \
+        -Dsonar.projectKey=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementarorg-frontend \
+        -Dsonar.token="$SONAR_TOKEN" \
+        -Dsonar.sources=src \
+        -Dsonar.tests=src \
+        -Dsonar.test.inclusions="**/*.spec.ts" \
+        -Dsonar.javascript.lcov.reportPaths="$LCOV_FILE"
+
+    echo "Análise do Frontend enviada com sucesso."
+fi
+
+
 # ============================================================
 # 4. BACKEND - SPOTLESS + OPENREWRITE
 # ============================================================
@@ -152,7 +188,7 @@ fi
 echo ""
 
 # ============================================================
-# 6. SONARCLOUD (FRONTEND & BACKEND)
+# 6. SONARCLOUD BACKEND
 # ============================================================
 
 echo "=================================================="
@@ -167,23 +203,6 @@ if [ -z "${SONAR_TOKEN:-}" ]; then
 
 else
 
-    # --- Análise Frontend ---
-    echo ""
-    echo "Enviando Frontend ao SonarCloud..."
-    cd "$FRONT_DIR"
-
-    npx sonar-scanner \
-        -Dsonar.host.url=https://sonarcloud.io \
-        -Dsonar.organization=sgac-gestaoatividadecomplementarorg \
-        -Dsonar.projectKey=sgac-gestaoatividadecomplementarorg_gestaoatividadecomplementar-front \
-        -Dsonar.token="$SONAR_TOKEN" \
-        -Dsonar.sources=src \
-        -Dsonar.tests=src \
-        -Dsonar.test.inclusions="**/*.spec.ts" \
-        -Dsonar.javascript.lcov.reportPaths="$LCOV_FILE"
-
-    echo "Análise do Frontend enviada com sucesso."
-
     # --- Análise Backend ---
     echo ""
     echo "Enviando Backend ao SonarCloud..."
@@ -197,10 +216,8 @@ else
         -Dsonar.coverage.jacoco.xmlReportPaths="$JACOCO_FILE"
 
     echo "Análise do Backend enviada com sucesso."
-
 fi
 
-echo ""
 
 # ============================================================
 # 7. RESUMO

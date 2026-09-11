@@ -68,7 +68,7 @@ export const ATIVIDADES_MOCK: Atividade[] = [
 ];
 
 // 2. Solicitações de Validação
-export const SOLICITACOES_AVALIADOR_MOCK: SolicitacaoAvaliadorDetalhe[] = [
+export const SOLICITACOES_MOCK: SolicitacaoAvaliadorDetalhe[] = [
   {
     id: 7,
     estudanteNome: 'Lucas Gabriel Silva',
@@ -128,6 +128,8 @@ export const SOLICITACOES_AVALIADOR_MOCK: SolicitacaoAvaliadorDetalhe[] = [
   },
 ];
 
+export const SOLICITACOES_AVALIADOR_MOCK = SOLICITACOES_MOCK;
+
 // 3. Regulamentos
 export const REGULAMENTOS_MOCK: RegulamentoChunk[] = [
   {
@@ -156,7 +158,66 @@ export const REGULAMENTOS_MOCK: RegulamentoChunk[] = [
   },
 ];
 
-// 4. Funções de Cálculo Dinâmico
+// 4. Mocks de Cursos e Usuários
+export interface CursoMock {
+  id: number;
+  nome: string;
+  codigo: string;
+  cargaHorariaAcc: number;
+  cargaHorariaAcex: number;
+}
+
+export const CURSOS_MOCK: CursoMock[] = [
+  {
+    id: 1,
+    nome: 'Engenharia de Software',
+    codigo: 'ES',
+    cargaHorariaAcc: 90,
+    cargaHorariaAcex: 320,
+  },
+  {
+    id: 2,
+    nome: 'Ciência da Computação',
+    codigo: 'CC',
+    cargaHorariaAcc: 90,
+    cargaHorariaAcex: 320,
+  },
+  { id: 3, nome: 'Agronomia', codigo: 'AGRO', cargaHorariaAcc: 120, cargaHorariaAcex: 300 },
+];
+
+export interface UsuarioMock {
+  id: number;
+  nome: string;
+  email: string;
+  role: 'ESTUDANTE' | 'AVALIADOR' | 'ADMINISTRADOR';
+  status: string;
+}
+
+export const USUARIOS_MOCK: UsuarioMock[] = [
+  {
+    id: 1,
+    nome: 'Lucas Gabriel Silva',
+    email: 'aluno1@ufape.edu.br',
+    role: 'ESTUDANTE',
+    status: 'ATIVO',
+  },
+  {
+    id: 2,
+    nome: 'Prof. Dr. Ricardo Santos',
+    email: 'avaliador@ufape.edu.br',
+    role: 'AVALIADOR',
+    status: 'ATIVO',
+  },
+  {
+    id: 3,
+    nome: 'Admin SGAC',
+    email: 'admin@ufape.edu.br',
+    role: 'ADMINISTRADOR',
+    status: 'ATIVO',
+  },
+];
+
+// 5. Funções de Cálculo Dinâmico
 export function obterProgressoCalculado(): ProgressoCargaHorariaDTO {
   const accAprovadas = ATIVIDADES_MOCK.filter(
     (a) => a.natureza === 'ACC' && a.status === 'APROVADA',
@@ -240,4 +301,56 @@ export function obterRelatorioCalculado(email: string): RelatorioAtividades {
     totalHorasAcex,
     totalHorasGeral: totalHorasAcc + totalHorasAcex,
   };
+}
+
+const ATIVIDADES_MOCK_INICIAIS: Atividade[] = [
+  {
+    id: 1,
+    titulo: 'Monitoria Acadêmica de Algoritmos',
+    instituicaoResponsavel: 'UFAPE',
+    dataRealizacao: '2026-03-10',
+    cargaHorariaEmHoras: 30,
+    natureza: 'ACC',
+    categoria: 'ENSINO',
+    dataCadastro: '2026-03-11T08:00:00',
+    status: 'APROVADA',
+  },
+  {
+    id: 2,
+    titulo: 'Projeto de Extensão AgroTI Comunitária',
+    instituicaoResponsavel: 'UFAPE',
+    dataRealizacao: '2026-04-15',
+    cargaHorariaEmHoras: 60,
+    natureza: 'ACEX',
+    categoria: 'EXTENSAO',
+    dataCadastro: '2026-04-16T10:30:00',
+    status: 'PENDENTE',
+  },
+  {
+    id: 3,
+    titulo: 'Iniciação Científica PIBIC/CNPq',
+    instituicaoResponsavel: 'UFAPE / CNPq',
+    dataRealizacao: '2026-05-20',
+    cargaHorariaEmHoras: 45,
+    natureza: 'ACC',
+    categoria: 'PESQUISA',
+    dataCadastro: '2026-05-21T09:15:00',
+    status: 'APROVADA',
+  },
+  {
+    id: 4,
+    titulo: 'Seminário Regional de Engenharia de Software',
+    instituicaoResponsavel: 'SBC Pernambuco',
+    dataRealizacao: '2026-06-05',
+    cargaHorariaEmHoras: 15,
+    natureza: 'ACC',
+    categoria: 'EVENTOS',
+    dataCadastro: '2026-06-06T14:00:00',
+    status: 'PENDENTE',
+  },
+];
+
+export function resetarAtividadesMock(): void {
+  ATIVIDADES_MOCK.length = 0;
+  ATIVIDADES_MOCK.push(...ATIVIDADES_MOCK_INICIAIS.map((a) => ({ ...a })));
 }
