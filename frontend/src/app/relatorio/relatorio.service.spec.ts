@@ -1,90 +1,134 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import { RelatorioService } from './relatorio.service';
-import { RelatorioAtividades } from './relatorio.model';
 import { API_BASE_URL } from '../api.config';
+import { RelatorioAtividades } from './relatorio.model';
 
 describe('RelatorioService', () => {
   let service: RelatorioService;
   let httpMock: HttpTestingController;
-  const url = `${API_BASE_URL}/relatorios/atividades`;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [RelatorioService, provideHttpClient(), provideHttpClientTesting()],
     });
+
     service = TestBed.inject(RelatorioService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+  });
 
-  it('busca o relatorio do estudante autenticado', () => {
-    const esperado: RelatorioAtividades = {
-      estudanteEmail: 'estudante@ufape.edu.br',
-      naturezas: [
-        {
-          natureza: 'ACC',
-          totalHoras: 15,
-          categorias: [
-            {
-              categoria: 'PESQUISA',
-              totalHoras: 15,
-              atividades: [
-                {
-                  id: 1,
-                  titulo: 'Iniciacao Cientifica',
-                  instituicaoResponsavel: 'UFAPE',
-                  dataRealizacao: '2026-03-10',
-                  cargaHorariaEmHoras: 15,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      totalHorasAcc: 15,
-      totalHorasAcex: 0,
-      totalHorasGeral: 15,
-    };
+  it('deve obter o relatório com sucesso', () => {
+    const mockRelatorio: RelatorioAtividades = {} as RelatorioAtividades;
 
-    let recebido: RelatorioAtividades | undefined;
-    service.obterRelatorio().subscribe((relatorio) => (recebido = relatorio));
+    service.obterRelatorio().subscribe((data) => {
+      expect(data).toEqual(mockRelatorio);
+    });
 
-    const req = httpMock.expectOne(url);
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
     expect(req.request.method).toBe('GET');
-    req.flush(esperado);
-
-    expect(recebido).toEqual(esperado);
+    req.flush(mockRelatorio);
   });
 
-  it('traduz 401 para mensagem de sessao expirada', () => {
-    let erro: Error | undefined;
-    service.obterRelatorio().subscribe({ error: (e: Error) => (erro = e) });
+  it('deve tratar erro status 401 (Sessão expirada)', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Sessão expirada. Faça login novamente.');
+      },
+    });
 
-    httpMock.expectOne(url).flush(null, { status: 401, statusText: 'Unauthorized' });
-
-    expect(erro?.message).toBe('Sessão expirada. Faça login novamente.');
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({}, { status: 401, statusText: 'Unauthorized' });
   });
 
-  it('traduz 403 para mensagem de perfil sem permissao', () => {
-    let erro: Error | undefined;
-    service.obterRelatorio().subscribe({ error: (e: Error) => (erro = e) });
+  it('deve tratar erro status 0 (Falha de conexão)', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+      },
+    });
 
-    httpMock.expectOne(url).flush(null, { status: 403, statusText: 'Forbidden' });
-
-    expect(erro?.message).toBe('Apenas estudantes podem emitir o relatório de atividades.');
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({}, { status: 0, statusText: 'Unknown Error' });
   });
 
-  it('traduz falha de conexao', () => {
-    let erro: Error | undefined;
-    service.obterRelatorio().subscribe({ error: (e: Error) => (erro = e) });
+  it('deve tratar erro status 403 sem mensagem no corpo (padrão)', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Apenas estudantes podem emitir o relatório de atividades.');
+      },
+    });
 
-    httpMock
-      .expectOne(url)
-      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({}, { status: 403, statusText: 'Forbidden' });
+  });
 
-    expect(erro?.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+  it('deve tratar erro status 403 com mensagem no formato string', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Erro 403 em string');
+      },
+    });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush('  Erro 403 em string  ', { status: 403, statusText: 'Forbidden' });
+  });
+
+  it('deve tratar erro status 403 com propriedade message no objeto', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Erro 403 no objeto');
+      },
+    });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({ message: '  Erro 403 no objeto  ' }, { status: 403, statusText: 'Forbidden' });
+  });
+
+  it('deve tratar erro genérico (ex: 500) sem mensagem (padrão)', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Não foi possível carregar seu relatório. Tente novamente.');
+      },
+    });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({}, { status: 500, statusText: 'Internal Server Error' });
+  });
+
+  it('deve tratar erro genérico com mensagem em string', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Falha interna');
+      },
+    });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush(' Falha interna ', { status: 500, statusText: 'Internal Server Error' });
+  });
+
+  it('deve tratar erro com corpo não textual e campo message inválido ou ausente', () => {
+    service.obterRelatorio().subscribe({
+      next: () => expect.fail('Deveria ter falhado'),
+      error: (err: Error) => {
+        expect(err.message).toBe('Não foi possível carregar seu relatório. Tente novamente.');
+      },
+    });
+
+    const req = httpMock.expectOne(`${API_BASE_URL}/relatorios/atividades`);
+    req.flush({ message: 12345 }, { status: 500, statusText: 'Internal Server Error' });
   });
 });

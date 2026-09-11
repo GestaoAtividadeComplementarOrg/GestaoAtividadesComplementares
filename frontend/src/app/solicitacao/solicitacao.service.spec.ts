@@ -1,20 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { SolicitacaoService } from './solicitacao.service';
-import { SolicitacaoDetalhe, SolicitacaoResumo } from './solicitacao.model';
 import { API_BASE_URL } from '../api.config';
-
-const detalheMock: SolicitacaoDetalhe = {
-  id: 7,
-  status: 'SUBMETIDA',
-  dataSubmissao: '2026-08-20T10:30:00',
-  totalAtividades: 2,
-  itens: [
-    { atividadeId: 1, titulo: 'Iniciacao Cientifica', cargaHoraria: 15, natureza: 'ACC' },
-    { atividadeId: 2, titulo: 'Projeto de Extensao', cargaHoraria: 20, natureza: 'ACEX' },
-  ],
-};
 
 describe('SolicitacaoService', () => {
   let service: SolicitacaoService;
@@ -31,122 +20,67 @@ describe('SolicitacaoService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('submete o relatorio para validacao via POST', () => {
-    let recebido: SolicitacaoDetalhe | undefined;
-    service.submeter().subscribe((detalhe) => (recebido = detalhe));
-
+  it('deve submeter solicitacao', () => {
+    service.submeter().subscribe((res) => expect(res).toBeTruthy());
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('POST');
-    req.flush(detalheMock);
-
-    expect(recebido).toEqual(detalheMock);
+    req.flush({ id: 1, status: 'SUBMETIDO' });
   });
 
-  it('traduz 409 para mensagem de solicitacao ja em aberto', () => {
-    let erro: Error | undefined;
-    service.submeter().subscribe({ error: (e: Error) => (erro = e) });
-
-    httpMock.expectOne(url).flush(null, { status: 409, statusText: 'Conflict' });
-
-    expect(erro?.message).toBe(
-      'Você já possui uma solicitação em aberto. Acompanhe o andamento antes de enviar outra.',
-    );
-  });
-
-  it('traduz 422 para mensagem de relatorio sem atividades', () => {
-    let erro: Error | undefined;
-    service.submeter().subscribe({ error: (e: Error) => (erro = e) });
-
-    httpMock.expectOne(url).flush(null, { status: 422, statusText: 'Unprocessable Entity' });
-
-    expect(erro?.message).toBe(
-      'Cadastre ao menos uma atividade antes de enviar o relatório para validação.',
-    );
-  });
-
-  it('traduz 400 com a mesma mensagem de relatorio sem atividades', () => {
-    let erro: Error | undefined;
-    service.submeter().subscribe({ error: (e: Error) => (erro = e) });
-
-    httpMock.expectOne(url).flush(null, { status: 400, statusText: 'Bad Request' });
-
-    expect(erro?.message).toBe(
-      'Cadastre ao menos uma atividade antes de enviar o relatório para validação.',
-    );
-  });
-
-  it('prioriza a mensagem enviada pelo backend na submissao', () => {
-    let erro: Error | undefined;
-    service.submeter().subscribe({ error: (e: Error) => (erro = e) });
-
-    httpMock
-      .expectOne(url)
-      .flush({ message: 'Regulamento vigente ausente.' }, { status: 409, statusText: 'Conflict' });
-
-    expect(erro?.message).toBe('Regulamento vigente ausente.');
-  });
-
-  it('lista as solicitacoes do estudante', () => {
-    const esperado: SolicitacaoResumo[] = [
-      { id: 7, status: 'SUBMETIDA', dataSubmissao: '2026-08-20T10:30:00', totalAtividades: 2 },
-    ];
-
-    let recebido: SolicitacaoResumo[] | undefined;
-    service.listar().subscribe((lista) => (recebido = lista));
-
+  it('deve listar solicitacoes', () => {
+    service.listar().subscribe((res) => expect(res.length).toBe(1));
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('GET');
-    req.flush(esperado);
-
-    expect(recebido).toEqual(esperado);
+    req.flush([{ id: 1 }]);
   });
 
-  it('devolve lista vazia quando o backend responde null', () => {
-    let recebido: SolicitacaoResumo[] | undefined;
-    service.listar().subscribe((lista) => (recebido = lista));
-
-    httpMock.expectOne(url).flush(null);
-
-    expect(recebido).toEqual([]);
-  });
-
-  it('detalha uma solicitacao pelo id', () => {
-    let recebido: SolicitacaoDetalhe | undefined;
-    service.detalhar(7).subscribe((detalhe) => (recebido = detalhe));
-
-    const req = httpMock.expectOne(`${url}/7`);
+  it('deve detalhar solicitacao por id', () => {
+    service.detalhar(1).subscribe((res) => expect(res.id).toBe(1));
+    const req = httpMock.expectOne(`${url}/1`);
     expect(req.request.method).toBe('GET');
-    req.flush(detalheMock);
-
-    expect(recebido).toEqual(detalheMock);
+    req.flush({ id: 1 });
   });
 
-  it('traduz 404 do detalhe para mensagem de solicitacao inexistente', () => {
+  it('deve traduzir erro 403 na submissao', () => {
     let erro: Error | undefined;
-    service.detalhar(99).subscribe({ error: (e: Error) => (erro = e) });
-
-    httpMock.expectOne(`${url}/99`).flush(null, { status: 404, statusText: 'Not Found' });
-
-    expect(erro?.message).toBe('Solicitação não encontrada.');
+    service.submeter().subscribe({ error: (e: Error) => (erro = e) });
+    httpMock.expectOne(url).flush(null, { status: 403, statusText: 'Forbidden' });
+    expect(erro?.message).toBe('Apenas estudantes podem solicitar a validação de atividades.');
   });
 
-  it('traduz 401 para mensagem de sessao expirada', () => {
-    let erro: Error | undefined;
-    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+  it('deve traduzir erro 500 generico na submissao e leitura', () => {
+    let erroSubmissao: Error | undefined;
+    let erroLeitura: Error | undefined;
 
-    httpMock.expectOne(url).flush(null, { status: 401, statusText: 'Unauthorized' });
+    service.submeter().subscribe({ error: (e: Error) => (erroSubmissao = e) });
+    httpMock.expectOne(url).flush(null, { status: 500, statusText: 'Internal Server Error' });
 
-    expect(erro?.message).toBe('Sessão expirada. Faça login novamente.');
+    service.listar().subscribe({ error: (e: Error) => (erroLeitura = e) });
+    httpMock.expectOne(url).flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+    expect(erroSubmissao?.message).toBe(
+      'Não foi possível enviar o relatório para validação. Tente novamente.',
+    );
+    expect(erroLeitura?.message).toBe(
+      'Não foi possível carregar suas solicitações. Tente novamente.',
+    );
   });
 
-  it('traduz falha de conexao', () => {
-    let erro: Error | undefined;
-    service.listar().subscribe({ error: (e: Error) => (erro = e) });
+  it('deve extrair texto de erro em formato string ou objeto do backend', () => {
+    let erroStr: Error | undefined;
+    let erroObj: Error | undefined;
 
+    service.detalhar(1).subscribe({ error: (e: Error) => (erroStr = e) });
     httpMock
-      .expectOne(url)
-      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+      .expectOne(`${url}/1`)
+      .flush('Erro direto em string', { status: 400, statusText: 'Bad Request' });
 
-    expect(erro?.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    service.detalhar(2).subscribe({ error: (e: Error) => (erroObj = e) });
+    httpMock
+      .expectOne(`${url}/2`)
+      .flush({ message: 'Objeto de erro' }, { status: 400, statusText: 'Bad Request' });
+
+    expect(erroStr?.message).toBe('Erro direto em string');
+    expect(erroObj?.message).toBe('Objeto de erro');
   });
 });

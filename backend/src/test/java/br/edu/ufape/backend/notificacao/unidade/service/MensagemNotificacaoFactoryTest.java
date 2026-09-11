@@ -69,7 +69,7 @@ class MensagemNotificacaoFactoryTest {
 
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = { "   ", "\t", "\n" })
+	@ValueSource(strings = {"   ", "\t", "\n"})
 	@DisplayName("Deve lancar IllegalArgumentException para COM_PENDENCIAS com justificativa nula ou em branco")
 	void deveLancarExcecaoParaComPendenciasSemJustificativa(String justificativaInvalida) {
 		assertThrows(IllegalArgumentException.class,
@@ -78,7 +78,7 @@ class MensagemNotificacaoFactoryTest {
 
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = { "   ", "\t", "\n" })
+	@ValueSource(strings = {"   ", "\t", "\n"})
 	@DisplayName("Deve lancar IllegalArgumentException para REJEITADA com justificativa nula ou em branco")
 	void deveLancarExcecaoParaRejeitadaSemJustificativa(String justificativaInvalida) {
 		assertThrows(IllegalArgumentException.class,
@@ -87,9 +87,10 @@ class MensagemNotificacaoFactoryTest {
 
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = { "DESCONHECIDO", "submetida", "   " })
+	@ValueSource(strings = {"DESCONHECIDO", "submetida", "   "})
 	@DisplayName("Deve lancar IllegalArgumentException para status nulo ou desconhecido")
 	void deveLancarExcecaoParaStatusInvalido(String novoStatus) {
-		assertThrows(IllegalArgumentException.class, () -> MensagemNotificacaoFactory.criar(novoStatus, "justificativa"));
+		assertThrows(IllegalArgumentException.class,
+				() -> MensagemNotificacaoFactory.criar(novoStatus, "justificativa"));
 	}
 }

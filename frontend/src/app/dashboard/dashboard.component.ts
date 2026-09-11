@@ -2,17 +2,9 @@ import { SituacaoSolicitacaoComponent } from './situacao-solicitacao/situacao-so
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {
-  ProgressoCargaHoraria,
-  ProgressoModalidade,
-} from '../atividades/progresso/progresso.model';
+import { ProgressoCargaHoraria } from '../atividades/progresso/progresso.model';
 import { ProgressoService } from '../atividades/progresso/progresso.service';
-
-interface ResumoModalidade {
-  titulo: string;
-  descricao: string;
-  dados: ProgressoModalidade;
-}
+import { ResumoModalidade, percentualExibido } from '../atividades/progresso/progresso-shared';
 
 @Component({
   selector: 'app-dashboard',
@@ -56,13 +48,11 @@ export class DashboardComponent implements OnInit {
     this.buscarProgresso();
   }
 
-  percentualExibido(dados: ProgressoModalidade): number {
-    return Math.min(100, Math.max(0, dados.percentualConcluido));
-  }
-
   tentarNovamente(): void {
     this.buscarProgresso();
   }
+
+  percentualExibido = percentualExibido;
 
   private buscarProgresso(): void {
     this.carregando.set(true);

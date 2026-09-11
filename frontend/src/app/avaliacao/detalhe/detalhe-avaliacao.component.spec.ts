@@ -90,4 +90,31 @@ describe('DetalheAvaliacaoComponent', () => {
     expect(alerta).toBeTruthy();
     expect(alerta.textContent).toContain('Solicitação não encontrada.');
   });
+
+  it('deve abrir, validar e confirmar decisão de aprovação no modal', () => {
+    const avaliacaoService = {
+      avaliar: vi.fn().mockReturnValue(of(detalheMock)),
+    };
+    const fixture = montar({ detalhar: () => of(detalheMock), avaliar: avaliacaoService.avaliar });
+    fixture.detectChanges();
+
+    fixture.componentInstance.abrirModalDecisao('APROVADA');
+    expect(fixture.componentInstance.modalDecisaoAberto()).toBe(true);
+    expect(fixture.componentInstance.isJustificativaObrigatoria()).toBe(false);
+
+    fixture.componentInstance.confirmarDecisao();
+    expect(avaliacaoService.avaliar).toHaveBeenCalledWith(7, 'APROVADA', '');
+    expect(fixture.componentInstance.modalDecisaoAberto()).toBe(false);
+  });
+
+  it('deve exigir justificativa ao marcar pendências ou rejeitar', () => {
+    const fixture = montar({ detalhar: () => of(detalheMock) });
+    fixture.detectChanges();
+
+    fixture.componentInstance.abrirModalDecisao('COM_PENDENCIAS');
+    expect(fixture.componentInstance.isDecisaoInvalida()).toBe(true);
+
+    fixture.componentInstance.justificativa.set('Falta comprovante assinado.');
+    expect(fixture.componentInstance.isDecisaoInvalida()).toBe(false);
+  });
 });

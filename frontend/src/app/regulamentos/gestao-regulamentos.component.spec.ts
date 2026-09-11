@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GestaoRegulamentosComponent } from './gestao-regulamentos.component';
 import {
@@ -75,6 +75,51 @@ describe('GestaoRegulamentosComponent', () => {
 
     expect(serviceSpy.ingerirDocumento).toHaveBeenCalledWith(file, false);
     expect(component.resultado()).toEqual(ingestaoSucesso);
+    expect(component.processando()).toBe(false);
+  });
+
+  it('deve processar documento com substituicao ativa', () => {
+    component.substituirExistentes.set(true);
+    const file = new File(['texto'], 'norma.pdf', { type: 'application/pdf' });
+    component.aoSelecionarArquivo({ target: { files: [file] } } as unknown as Event);
+
+    component.processarDocumento();
+    expect(serviceSpy.ingerirDocumento).toHaveBeenCalledWith(file, true);
+  });
+
+  it('não deve processar sem arquivo selecionado', () => {
+    component.processarDocumento();
+    expect(serviceSpy.ingerirDocumento).not.toHaveBeenCalled();
+  });
+
+  it('deve tratar eventos de dragover, dragleave e drop', () => {
+    const mockEvent = {
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      dataTransfer: {
+        files: [new File(['conteudo'], 'ppc.pdf', { type: 'application/pdf' })],
+      },
+    } as unknown as DragEvent;
+
+    component.onDragOver(mockEvent);
+    expect(component.arrastando()).toBe(true);
+
+    component.onDragLeave(mockEvent);
+    expect(component.arrastando()).toBe(false);
+
+    component.onDrop(mockEvent);
+    expect(component.arquivoSelecionado()?.name).toBe('ppc.pdf');
+  });
+
+  it('deve lidar com erros ao processar o documento', () => {
+    serviceSpy.ingerirDocumento.mockReturnValue(
+      throwError(() => ({ error: { message: 'Erro na vetorização' } })),
+    );
+    const file = new File(['txt'], 'norma.txt', { type: 'text/plain' });
+    component.aoSelecionarArquivo({ target: { files: [file] } } as unknown as Event);
+
+    component.processarDocumento();
+    expect(component.mensagemErro()).toBe('Erro na vetorização');
     expect(component.processando()).toBe(false);
   });
 });

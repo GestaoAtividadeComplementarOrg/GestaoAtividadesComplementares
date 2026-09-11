@@ -1,63 +1,51 @@
+import { TestBed } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { AutenticacaoService } from './autenticacao.service';
 import { AuthInterceptor } from './auth.interceptor';
-
-const createStorageMock = () => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => {
-      store[key] = String(value);
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-    get length() {
-      return Object.keys(store).length;
-    },
-  };
-};
+import { AutenticacaoService } from './autenticacao.service';
 
 describe('AuthInterceptor', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
-  let authService: AutenticacaoService;
-  let router: Router;
+  let authServiceMock: {
+    getToken: ReturnType<typeof vi.fn>;
+    getTokenType: ReturnType<typeof vi.fn>;
+    encerrarSessao: ReturnType<typeof vi.fn>;
+  };
+  let spyRouter: any;
 
   beforeEach(() => {
-    vi.stubGlobal('localStorage', createStorageMock());
-    vi.stubGlobal('sessionStorage', createStorageMock());
+    TestBed.resetTestingModule();
+    spyRouter = { navigate: vi.fn() };
+    authServiceMock = {
+      getToken: vi.fn().mockReturnValue('token-123'),
+      getTokenType: vi.fn().mockReturnValue('Bearer'),
+      encerrarSessao: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       providers: [
+        { provide: AutenticacaoService, useValue: authServiceMock },
+        { provide: Router, useValue: spyRouter },
         provideHttpClient(withInterceptors([AuthInterceptor])),
         provideHttpClientTesting(),
-        provideRouter([]),
       ],
     });
 
     http = TestBed.inject(HttpClient);
     httpMock = TestBed.inject(HttpTestingController);
-    authService = TestBed.inject(AutenticacaoService);
-    router = TestBed.inject(Router);
   });
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.clear();
-    sessionStorage.clear();
   });
 
   it('deve anexar o header Authorization usando o tipo de token salvo', () => {
-    authService.saveToken('token-123', 'Bearer');
+    authServiceMock.getToken.mockReturnValue('token-123');
+    authServiceMock.getTokenType.mockReturnValue('Bearer');
+
     http.get('http://localhost:8080/atividades').subscribe();
 
     const req = httpMock.expectOne('http://localhost:8080/atividades');
@@ -66,38 +54,33 @@ describe('AuthInterceptor', () => {
   });
 
   it('não deve anexar o header Authorization quando não houver token', () => {
+    authServiceMock.getToken.mockReturnValue(null);
+
     http.get('http://localhost:8080/atividades').subscribe();
 
     const req = httpMock.expectOne('http://localhost:8080/atividades');
-    expect(req.request.headers.has('Authorization')).toBeFalsy();
+    expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
 
   it('deve limpar o token e redirecionar para /login ao receber 401 em rota protegida', () => {
-    const spyRouter = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    authService.saveToken('token-expirado', 'Bearer');
-    sessionStorage.setItem('user-data', JSON.stringify({ nome: 'Teste' }));
+    authServiceMock.getToken.mockReturnValue('token-expirado');
 
-    http.get('http://localhost:8080/atividades').subscribe({
-      error: () => undefined,
-    });
+    http.get('http://localhost:8080/atividades').subscribe({ error: () => {} });
+
     const req = httpMock.expectOne('http://localhost:8080/atividades');
-    req.flush({ message: 'expirado' }, { status: 401, statusText: 'Unauthorized' });
+    req.flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
-    expect(spyRouter).toHaveBeenCalledWith(['/login']);
+    expect(authServiceMock.encerrarSessao).toHaveBeenCalled();
+    expect(spyRouter.navigate).toHaveBeenCalledWith(['/login']);
   });
 
   it('não deve redirecionar ao receber 401 na própria rota de login', () => {
-    const spyRouter = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    http.post('http://localhost:8080/api/v1/auth/login', {}).subscribe({ error: () => {} });
 
-    http.post('http://localhost:8080/auth/login', {}).subscribe({
-      error: () => undefined,
-    });
-    const req = httpMock.expectOne('http://localhost:8080/auth/login');
-    req.flush({ message: 'credenciais inválidas' }, { status: 401, statusText: 'Unauthorized' });
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/auth/login');
+    req.flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    expect(spyRouter).not.toHaveBeenCalled();
+    expect(spyRouter.navigate).not.toHaveBeenCalled();
   });
 });

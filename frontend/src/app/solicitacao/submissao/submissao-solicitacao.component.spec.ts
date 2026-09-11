@@ -63,7 +63,7 @@ describe('SubmissaoSolicitacaoComponent', () => {
     botaoConfirmar.click();
     fixture.detectChanges();
 
-    const sucesso = fixture.nativeElement.querySelector('[role="status"]');
+    const sucesso = fixture.nativeElement.querySelector('[data-testid="banner-submissao-sucesso"]');
     expect(sucesso).toBeTruthy();
     expect(sucesso.textContent).toContain('Submetida');
     expect(fixture.componentInstance.confirmacaoAberta()).toBe(false);

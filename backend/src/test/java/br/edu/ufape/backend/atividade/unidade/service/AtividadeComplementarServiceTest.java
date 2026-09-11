@@ -71,8 +71,8 @@ class AtividadeComplementarServiceTest {
 	@Mock
 	private ParecerConformidadeRepository parecerConformidadeRepository;
 
-    @Mock
-    private SolicitacaoContrato solicitacaoContrato;
+	@Mock
+	private SolicitacaoContrato solicitacaoContrato;
 
 	@InjectMocks
 	private AtividadeComplementarService service;
@@ -515,41 +515,41 @@ class AtividadeComplementarServiceTest {
 		verify(atividadeRepository).findByEstudante_Id(estudanteId);
 	}
 
-    @Test
-    @DisplayName("Deve bloquear atualizacao de atividade vinculada a solicitacao em aberto")
-    void deveBloquearAtualizacaoComSolicitacaoEmAberto() {
-        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
-        estudante.setId(1L);
+	@Test
+	@DisplayName("Deve bloquear atualizacao de atividade vinculada a solicitacao em aberto")
+	void deveBloquearAtualizacaoComSolicitacaoEmAberto() {
+		Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+		estudante.setId(1L);
 
-        AtividadeComplementar atividadeOriginal = criarAtividadeComCertificado(estudante, "/tmp/certificado.pdf");
-        atividadeOriginal.setId(ID_ATIVIDADE);
+		AtividadeComplementar atividadeOriginal = criarAtividadeComCertificado(estudante, "/tmp/certificado.pdf");
+		atividadeOriginal.setId(ID_ATIVIDADE);
 
-        AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO("Titulo", "Instituicao",
-                LocalDate.now(), 20, Natureza.ACC, Categoria.PESQUISA);
+		AtualizarAtividadeRequestDTO request = new AtualizarAtividadeRequestDTO("Titulo", "Instituicao",
+				LocalDate.now(), 20, Natureza.ACC, Categoria.PESQUISA);
 
-        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
-        when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeOriginal));
-        when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(ID_ATIVIDADE)).thenReturn(true);
+		when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+		when(atividadeRepository.findById(ID_ATIVIDADE)).thenReturn(Optional.of(atividadeOriginal));
+		when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(ID_ATIVIDADE)).thenReturn(true);
 
-        assertThrows(AtividadeVinculadaASolicitacaoException.class,
-                () -> service.atualizarAtividade(ID_ATIVIDADE, request, null, EMAIL));
+		assertThrows(AtividadeVinculadaASolicitacaoException.class,
+				() -> service.atualizarAtividade(ID_ATIVIDADE, request, null, EMAIL));
 
-        verify(atividadeRepository, never()).save(any());
-    }
+		verify(atividadeRepository, never()).save(any());
+	}
 
-    @Test
-    @DisplayName("Deve bloquear exclusao de atividade vinculada a solicitacao em aberto")
-    void deveBloquearExclusaoComSolicitacaoEmAberto() {
-        Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
-        AtividadeComplementar atividade = criarAtividade(Natureza.ACC, Categoria.PESQUISA, estudante);
+	@Test
+	@DisplayName("Deve bloquear exclusao de atividade vinculada a solicitacao em aberto")
+	void deveBloquearExclusaoComSolicitacaoEmAberto() {
+		Estudante estudante = new Estudante("Estudante", EMAIL, "hash");
+		AtividadeComplementar atividade = criarAtividade(Natureza.ACC, Categoria.PESQUISA, estudante);
 
-        when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
-        when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante)).thenReturn(Optional.of(atividade));
-        when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(ID_ATIVIDADE)).thenReturn(true);
+		when(usuarioContrato.buscarPorEmail(EMAIL)).thenReturn(Optional.of(estudante));
+		when(atividadeRepository.findByIdAndEstudante(ID_ATIVIDADE, estudante)).thenReturn(Optional.of(atividade));
+		when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(ID_ATIVIDADE)).thenReturn(true);
 
-        assertThrows(AtividadeVinculadaASolicitacaoException.class,
-                () -> service.excluirAtividade(ID_ATIVIDADE, EMAIL));
+		assertThrows(AtividadeVinculadaASolicitacaoException.class,
+				() -> service.excluirAtividade(ID_ATIVIDADE, EMAIL));
 
-        verify(atividadeRepository, never()).delete(any());
-    }
+		verify(atividadeRepository, never()).delete(any());
+	}
 }

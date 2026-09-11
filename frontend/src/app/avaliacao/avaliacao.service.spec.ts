@@ -110,4 +110,68 @@ describe('AvaliacaoService', () => {
     httpMock.expectOne(`${url}/avaliacao`).flush(null, { status: 403, statusText: 'Forbidden' });
     expect(erro?.message).toBe('Apenas avaliadores podem consultar as solicitações de validação.');
   });
+
+  it('traduz 401 para sessão expirada no consultar', () => {
+    let erro: Error | undefined;
+    service.consultar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(`${url}/avaliacao`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    expect(erro?.message).toBe('Sessão expirada. Faça login novamente.');
+  });
+
+  it('traduz status 0 para falha de conexão no consultar', () => {
+    let erro: Error | undefined;
+    service.consultar().subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(`${url}/avaliacao`).error(new ProgressEvent('error'), { status: 0 });
+    expect(erro?.message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão.');
+  });
+
+  it('traduz 404 para solicitação não encontrada no detalhar', () => {
+    let erro: Error | undefined;
+    service.detalhar(99).subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(`${url}/99/avaliacao`).flush(null, { status: 404, statusText: 'Not Found' });
+    expect(erro?.message).toBe('Solicitação não encontrada.');
+  });
+
+  it('traduz 404 para solicitação não encontrada na avaliação', () => {
+    let erro: Error | undefined;
+    service.avaliar(99, 'APROVADA').subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock.expectOne(`${url}/99/avaliacao`).flush(null, { status: 404, statusText: 'Not Found' });
+    expect(erro?.message).toBe('Solicitação não encontrada.');
+  });
+
+  it('traduz 400 para dados de avaliação inválidos', () => {
+    let erro: Error | undefined;
+    service.avaliar(7, 'APROVADA').subscribe({ error: (e: Error) => (erro = e) });
+
+    httpMock
+      .expectOne(`${url}/7/avaliacao`)
+      .flush(null, { status: 400, statusText: 'Bad Request' });
+    expect(erro?.message).toBe('Dados da avaliação inválidos.');
+  });
+
+  it('deve enviar avaliação com justificativa', () => {
+    let recebido: SolicitacaoAvaliadorDetalhe | undefined;
+    service.avaliar(7, 'REJEITADA', 'Motivo da rejeição').subscribe((res) => (recebido = res));
+
+    const req = httpMock.expectOne(`${url}/7/avaliacao`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ decisao: 'REJEITADA', justificativa: 'Motivo da rejeição' });
+    req.flush({ ...detalheMock, status: 'REJEITADA' });
+
+    expect(recebido?.status).toBe('REJEITADA');
+  });
+
+  it('lista solicitações pendentes', () => {
+    let recebido: SolicitacaoAvaliadorResumo[] | undefined;
+    service.listarPendentes().subscribe((lista) => (recebido = lista));
+
+    const req = httpMock.expectOne(`${url}/avaliacao`);
+    expect(req.request.method).toBe('GET');
+    req.flush(resumoMock);
+    expect(recebido).toEqual(resumoMock);
+  });
 });

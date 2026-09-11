@@ -1,6 +1,6 @@
 import { Notificacao } from './notificacao.model';
 
-export let NOTIFICACOES_MOCK: Notificacao[] = [
+export const NOTIFICACOES_MOCK: Notificacao[] = [
   {
     id: 1,
     tipo: 'SOLICITACAO_APROVADA',
@@ -51,6 +51,8 @@ export let NOTIFICACOES_MOCK: Notificacao[] = [
   },
 ];
 
+const DADOS_INICIAIS: Notificacao[] = NOTIFICACOES_MOCK.map((n) => ({ ...n }));
+
 export function resetarMocks(): void {
-  NOTIFICACOES_MOCK = NOTIFICACOES_MOCK.map((n) => ({ ...n }));
+  NOTIFICACOES_MOCK.splice(0, NOTIFICACOES_MOCK.length, ...DADOS_INICIAIS.map((n) => ({ ...n })));
 }

@@ -118,16 +118,20 @@
           <h2 class="text-base font-bold text-[#003629]">Novo Usuário Institucional</h2>
           <form [formGroup]="formUsuario" (ngSubmit)="salvarUsuario()" class="space-y-3 text-xs">
             <div>
-              <label class="block font-semibold mb-1">Nome Completo *</label>
+              <label for="usuario-nome" class="block font-semibold mb-1">Nome Completo *</label>
               <input
+                id="usuario-nome"
                 formControlName="nome"
                 class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
                 placeholder="Ex: Prof. Dr. Silva"
               />
             </div>
             <div>
-              <label class="block font-semibold mb-1">E-mail Institucional *</label>
+              <label for="usuario-email" class="block font-semibold mb-1"
+                >E-mail Institucional *</label
+              >
               <input
+                id="usuario-email"
                 formControlName="email"
                 type="email"
                 class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
@@ -135,8 +139,9 @@
               />
             </div>
             <div>
-              <label class="block font-semibold mb-1">Senha Inicial *</label>
+              <label for="usuario-senha" class="block font-semibold mb-1">Senha Inicial *</label>
               <input
+                id="usuario-senha"
                 formControlName="senha"
                 type="password"
                 class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
@@ -144,8 +149,12 @@
               />
             </div>
             <div>
-              <label class="block font-semibold mb-1">Papel / Função *</label>
-              <select formControlName="role" class="w-full border rounded-lg p-2 bg-[#f8f9fa]">
+              <label for="usuario-role" class="block font-semibold mb-1">Papel / Função *</label>
+              <select
+                id="usuario-role"
+                formControlName="role"
+                class="w-full border rounded-lg p-2 bg-[#f8f9fa]"
+              >
                 <option value="AVALIADOR">Avaliador (Docente / Comissão)</option>
                 <option value="ADMINISTRADOR">Administrador Geral</option>
               </select>

@@ -417,7 +417,7 @@ describe('ListagemAtividadesComponent', () => {
       f.detectChanges();
 
       expect(f.componentInstance.mensagemSucesso()).toBeNull();
-      const bannerSucesso = f.nativeElement.querySelector('[role="status"]');
+      const bannerSucesso = f.nativeElement.querySelector('.bg-\\[#e6efe9\\]');
       expect(bannerSucesso).toBeFalsy();
     });
   });

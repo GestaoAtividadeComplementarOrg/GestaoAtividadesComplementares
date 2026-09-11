@@ -71,7 +71,7 @@ export class AutenticacaoService {
     try {
       const payloadBase64 = token.split('.')[1];
       if (!payloadBase64) return null;
-      const json = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const json = atob(payloadBase64.replaceAll('-', '+').replaceAll('_', '/'));
       const parsed = JSON.parse(json);
       const role = parsed.role ?? parsed.roles?.[0] ?? null;
       return role as Role | null;

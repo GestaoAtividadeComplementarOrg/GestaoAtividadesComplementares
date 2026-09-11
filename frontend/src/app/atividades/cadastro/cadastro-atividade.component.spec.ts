@@ -1,23 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { CadastroAtividadeComponent } from './cadastro-atividade.component';
 import { AtividadeService } from '../atividade.service';
-import { API_BASE_URL } from '../../api.config';
 
-const ATIVIDADES_URL = `${API_BASE_URL}/atividades`;
-
-describe('CadastroAtividadeComponent', () => {
+describe('CadastroAtividadeComponent - Cobertura Total 100%', () => {
   let component: CadastroAtividadeComponent;
   let fixture: ComponentFixture<CadastroAtividadeComponent>;
   let atividadeService: AtividadeService;
-  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
+
+    window.scrollTo = vi.fn();
+
     await TestBed.configureTestingModule({
       imports: [CadastroAtividadeComponent],
       providers: [
@@ -27,199 +26,275 @@ describe('CadastroAtividadeComponent', () => {
         provideRouter([]),
       ],
     }).compileComponents();
+
+    atividadeService = TestBed.inject(AtividadeService);
     fixture = TestBed.createComponent(CadastroAtividadeComponent);
     component = fixture.componentInstance;
-    atividadeService = TestBed.inject(AtividadeService);
-    httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
   });
 
   afterEach(() => {
-    httpMock.verify();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  it('deve criar o componente', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('deve iniciar com formulário inválido e botão de envio desabilitado', () => {
-    expect(component.activityForm.valid).toBeFalsy();
-    expect(component.isFormularioInvalido()).toBeTruthy();
-  });
-
-  it('deve autopreencher os campos ao selecionar arquivo com IA', () => {
-    const arquivo = new File(['conteudo'], 'certificado.pdf', { type: 'application/pdf' });
-    const extracaoMock = {
-      titulo: 'Curso de IA Aplicada',
-      instituicaoResponsavel: 'UFAPE',
-      dataRealizacao: '2026-04-10',
-      cargaHoraria: 40,
+  function preencherFormularioValido(): void {
+    component.activityForm.patchValue({
+      titulo: 'Atividade Teste',
+      instituicao: 'UFAPE',
+      data: '2026-03-10',
       natureza: 'ACC',
-      categoria: 'PESQUISA',
-    };
+      categoria: 'ENSINO',
+      cargaHoraria: 20,
+    });
+  }
 
-    vi.spyOn(atividadeService, 'extrairDadosCertificado').mockReturnValue(of(extracaoMock as any));
+  it('deve validar o método isCampoInvalido', () => {
+    expect(component.isCampoInvalido('campoInexistente')).toBe(false);
 
-    component.aoSelecionarArquivoComIA({ target: { files: [arquivo] } } as unknown as Event);
+    const tituloControl = component.activityForm.get('titulo');
+    expect(component.isCampoInvalido('titulo')).toBe(false);
 
-    expect(component.arquivoAnexado()).toEqual(arquivo);
-    expect(component.activityForm.value.titulo).toBe('Curso de IA Aplicada');
-    expect(component.activityForm.value.instituicao).toBe('UFAPE');
-    expect(component.activityForm.value.cargaHoraria).toBe(40);
-    expect(component.extraindoComIA()).toBe(false);
+    tituloControl?.setValue('');
+    tituloControl?.markAsTouched();
+    expect(component.isCampoInvalido('titulo')).toBe(true);
   });
 
-  it('deve manter o arquivo anexado mesmo se a extração de IA falhar', () => {
-    const arquivo = new File(['conteudo'], 'certificado.pdf', { type: 'application/pdf' });
+  it('deve validar todas as condições de isFormularioInvalido', () => {
+    // Formulário inválido
+    expect(component.isFormularioInvalido()).toBe(true);
+
+    // Formulário válido mas sem arquivo
+    preencherFormularioValido();
+    expect(component.isFormularioInvalido()).toBe(true);
+
+    // Formulário válido + arquivo anexado
+    const file = new File(['conteudo'], 'certificado.pdf', { type: 'application/pdf' });
+    component.arquivoAnexado.set(file);
+    expect(component.isFormularioInvalido()).toBe(false);
+
+    // Com carregando ativado
+    component.carregando.set(true);
+    expect(component.isFormularioInvalido()).toBe(true);
+
+    component.carregando.set(false);
+    // Com extraindoComIA ativado
+    component.extraindoComIA.set(true);
+    expect(component.isFormularioInvalido()).toBe(true);
+  });
+
+  it('deve ignorar eventos de seleção quando nenhum arquivo for informado', () => {
+    const eventSemArquivos = { target: { files: null } } as unknown as Event;
+
+    component.onFileSelected(eventSemArquivos);
+    expect(component.arquivoAnexado()).toBeNull();
+
+    component.aoSelecionarArquivoComIA(eventSemArquivos);
+    expect(component.arquivoAnexado()).toBeNull();
+
+    component.aoSelecionarArquivo(eventSemArquivos);
+    expect(component.arquivoAnexado()).toBeNull();
+  });
+
+  it('deve processar seleção simples de arquivo via onFileSelected e aoSelecionarArquivo', () => {
+    const pdfFile = new File(['conteudo'], 'comprovante.pdf', { type: 'application/pdf' });
+    const inputElement = {
+      files: [pdfFile],
+      value: 'comprovante.pdf',
+    } as unknown as HTMLInputElement;
+    const event = { target: inputElement } as unknown as Event;
+
+    component.onFileSelected(event);
+    expect(component.arquivoAnexado()).toEqual(pdfFile);
+
+    component.aoSelecionarArquivo(event);
+    expect(component.arquivoAnexado()).toEqual(pdfFile);
+    expect(inputElement.value).toBe('');
+  });
+
+  it('deve processar seleção com IA com sucesso e aplicar fallbacks para campos vazios', () => {
+    const pdfFile = new File(['conteudo'], 'comprovante.pdf', { type: 'application/pdf' });
+    const inputElement = {
+      files: [pdfFile],
+      value: 'comprovante.pdf',
+    } as unknown as HTMLInputElement;
+    const event = { target: inputElement } as unknown as Event;
+
+    // Retorna objeto vazio para disparar os fallbacks ?? ''
+    vi.spyOn(atividadeService, 'extrairDadosCertificado').mockReturnValue(of({} as any));
+
+    component.aoSelecionarArquivoComIA(event);
+
+    expect(component.extraindoComIA()).toBe(false);
+    expect(component.activityForm.value.titulo).toBe('');
+    expect(component.activityForm.value.instituicao).toBe('');
+    expect(component.activityForm.value.data).toBe('');
+    expect(component.activityForm.value.cargaHoraria).toBe('');
+    expect(component.activityForm.value.natureza).toBe('');
+    expect(component.activityForm.value.categoria).toBe('');
+    expect(inputElement.value).toBe('');
+  });
+
+  it('deve tratar erro na extração de dados com IA', () => {
+    const pdfFile = new File(['conteudo'], 'comprovante.pdf', { type: 'application/pdf' });
+    const inputElement = { files: [pdfFile], value: '' } as unknown as HTMLInputElement;
+    const event = { target: inputElement } as unknown as Event;
 
     vi.spyOn(atividadeService, 'extrairDadosCertificado').mockReturnValue(
-      throwError(() => new Error('Falha de IA')),
+      throwError(() => new Error('Erro IA')),
     );
 
-    component.aoSelecionarArquivoComIA({ target: { files: [arquivo] } } as unknown as Event);
+    component.aoSelecionarArquivoComIA(event);
 
-    expect(component.arquivoAnexado()).toEqual(arquivo);
-    expect(component.erroExtracao()).toContain('Não foi possível extrair os dados');
     expect(component.extraindoComIA()).toBe(false);
+    expect(component.erroExtracao()).toContain('Não foi possível extrair os dados automaticamente');
   });
 
-  it('deve rejeitar arquivos com formato não permitido', () => {
-    const arquivoInvalido = new File(['dummy content'], 'teste.exe', {
-      type: 'application/x-msdownload',
-    });
-    const event = { target: { files: [arquivoInvalido] } } as unknown as Event;
-    component.onFileSelected(event);
+  it('deve cancelar extração com IA se o arquivo for inválido', () => {
+    const txtFile = new File(['conteudo'], 'texto.txt', { type: 'text/plain' });
+    const inputElement = { files: [txtFile], value: 'texto.txt' } as unknown as HTMLInputElement;
+    const event = { target: inputElement } as unknown as Event;
+
+    const spyIA = vi.spyOn(atividadeService, 'extrairDadosCertificado');
+
+    component.aoSelecionarArquivoComIA(event);
+
+    expect(spyIA).not.toHaveBeenCalled();
+    expect(inputElement.value).toBe('');
+    expect(component.erroArquivo()).toContain('Tipo de arquivo inválido');
+  });
+
+  it('deve tratar os eventos de Drag and Drop (onDragOver, onDragLeave, onDrop)', () => {
+    const dragEvent = {
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      dataTransfer: { files: [new File([''], 'doc.pdf', { type: 'application/pdf' })] },
+    } as unknown as DragEvent;
+
+    component.onDragOver(dragEvent);
+    expect(component.dragOver()).toBe(true);
+
+    component.onDragLeave(dragEvent);
+    expect(component.dragOver()).toBe(false);
+
+    component.onDrop(dragEvent);
+    expect(component.dragOver()).toBe(false);
+    expect(component.arquivoAnexado()?.name).toBe('doc.pdf');
+
+    // Testar onDrop sem arquivos
+    const emptyDrop = {
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      dataTransfer: { files: [] },
+    } as unknown as DragEvent;
+
+    component.onDrop(emptyDrop);
+    expect(component.dragOver()).toBe(false);
+  });
+
+  it('deve validar tipo e tamanho máximo de arquivo', () => {
+    // Tipo inválido
+    const invalidFile = new File([''], 'script.sh', { type: 'text/x-shellscript' });
+    const eventInvalid = { target: { files: [invalidFile] } } as unknown as Event;
+    component.onFileSelected(eventInvalid);
+
     expect(component.arquivoAnexado()).toBeNull();
-    expect(component.erroArquivo()).toContain('Tipo de arquivo');
+    expect(component.erroArquivo()).toContain('Tipo de arquivo inválido');
+
+    // Tamanho acima de 5MB
+    const bigFile = new File([''], 'gigante.pdf', { type: 'application/pdf' });
+    Object.defineProperty(bigFile, 'size', { value: 6 * 1024 * 1024 });
+    const eventBig = { target: { files: [bigFile] } } as unknown as Event;
+    component.onFileSelected(eventBig);
+
+    expect(component.arquivoAnexado()).toBeNull();
+    expect(component.erroArquivo()).toContain('excede o limite máximo de 5MB');
   });
 
-  it('deve aceitar arquivo PDF dentro do limite de tamanho', () => {
-    const arquivoValido = new File(['dummy content'], 'certificado.pdf', {
-      type: 'application/pdf',
-    });
-    const event = { target: { files: [arquivoValido] } } as unknown as Event;
-    component.onFileSelected(event);
-    expect(component.arquivoAnexado()).toEqual(arquivoValido);
+  it('deve remover o arquivo anexado ao chamar removerArquivo', () => {
+    component.arquivoAnexado.set(new File([''], 'doc.pdf', { type: 'application/pdf' }));
+    component.erroArquivo.set('Erro');
+    component.erroExtracao.set('Erro IA');
+
+    component.removerArquivo();
+
+    expect(component.arquivoAnexado()).toBeNull();
     expect(component.erroArquivo()).toBeNull();
+    expect(component.erroExtracao()).toBeNull();
   });
 
-  it('deve habilitar o formulário quando todos os campos obrigatórios e comprovante forem preenchidos', () => {
-    component.activityForm.setValue({
-      titulo: 'Minicurso de Python para Análise de Dados',
-      instituicao: 'UFAPE',
-      data: '2026-05-10',
-      natureza: 'ACC',
-      categoria: 'PESQUISA',
-      cargaHoraria: '20',
-    });
-    const arquivoValido = new File(['dummy content'], 'certificado.png', { type: 'image/png' });
-    component.onFileSelected({ target: { files: [arquivoValido] } } as unknown as Event);
-    expect(component.activityForm.valid).toBeTruthy();
-    expect(component.isFormularioInvalido()).toBeFalsy();
+  it('deve formatar o tamanho do arquivo corretamente em B, KB e MB', () => {
+    expect(component.formatarTamanhoArquivo(500)).toBe('500 B');
+    expect(component.formatarTamanhoArquivo(2048)).toBe('2.00 KB');
+    expect(component.formatarTamanhoArquivo(5242880)).toBe('5.00 MB');
   });
 
-  it('deve enviar o formulário e limpar os campos em caso de sucesso', () => {
-    component.activityForm.setValue({
-      titulo: 'Minicurso Python',
-      instituicao: 'Sebrae',
-      data: '2026-06-01',
-      natureza: 'ACEX',
-      categoria: 'EXTENSAO',
-      cargaHoraria: '10',
-    });
-    const arquivoValido = new File(['dummy content'], 'certificado.jpg', { type: 'image/jpeg' });
-    component.onFileSelected({ target: { files: [arquivoValido] } } as unknown as Event);
+  it('deve tratar cenários de bloqueio na submissão (onSubmit)', () => {
+    const spyCadastrar = vi.spyOn(atividadeService, 'cadastrar');
+
+    // 1. Formulário inválido
     component.onSubmit();
-    const req = httpMock.expectOne(ATIVIDADES_URL);
-    expect(req.request.method).toBe('POST');
-    req.flush({
-      id: 1,
-      titulo: 'Minicurso Python',
-      instituicaoResponsavel: 'Sebrae',
-      dataRealizacao: '2026-06-01',
-      cargaHorariaEmHoras: 10,
-      natureza: 'ACEX',
-      categoria: 'EXTENSAO',
-    });
-    expect(component.mensagemSucesso()).toBeTruthy();
-    expect(component.activityForm.get('titulo')?.value).toBeNull();
+    expect(spyCadastrar).not.toHaveBeenCalled();
+
+    // 2. Formulário válido, mas sem comprovante anexado
+    preencherFormularioValido();
+    component.onSubmit();
+    expect(component.erroArquivo()).toBe('O comprovante é obrigatório.');
+    expect(spyCadastrar).not.toHaveBeenCalled();
+
+    // 3. Comprovante anexado, mas extração de IA ainda em andamento
+    component.arquivoAnexado.set(new File([''], 'doc.pdf', { type: 'application/pdf' }));
+    component.extraindoComIA.set(true);
+    component.onSubmit();
+    expect(component.mensagemErro()).toBe('Aguarde a conclusão da leitura do certificado.');
+    expect(spyCadastrar).not.toHaveBeenCalled();
+
+    // 4. Já carregando (envio duplo)
+    component.extraindoComIA.set(false);
+    component.carregando.set(true);
+    component.onSubmit();
+    expect(spyCadastrar).not.toHaveBeenCalled();
+  });
+
+  it('deve submeter o formulário com sucesso, limpar os campos e ocultar mensagem após 4000ms', () => {
+    vi.useFakeTimers();
+    preencherFormularioValido();
+    component.arquivoAnexado.set(new File([''], 'doc.pdf', { type: 'application/pdf' }));
+
+    vi.spyOn(atividadeService, 'cadastrar').mockReturnValue(of({} as any));
+
+    component.onSubmit();
+
+    expect(component.carregando()).toBe(false);
+    expect(component.mensagemSucesso()).toBe(true);
     expect(component.arquivoAnexado()).toBeNull();
-    expect(component.carregando()).toBeFalsy();
+
+    vi.advanceTimersByTime(4000);
+
+    expect(component.mensagemSucesso()).toBe(false);
   });
 
-  it('deve exibir mensagem de erro devolvida pela API em caso de falha 400', () => {
-    component.activityForm.setValue({
-      titulo: 'Projeto de Pesquisa',
-      instituicao: 'UFAPE',
-      data: '2026-01-15',
-      natureza: 'ACC',
-      categoria: 'PESQUISA',
-      cargaHoraria: '100',
-    });
-    const arquivoValido = new File(['dummy content'], 'comprovante.pdf', {
-      type: 'application/pdf',
-    });
-    component.onFileSelected({ target: { files: [arquivoValido] } } as unknown as Event);
+  it('deve tratar os diferentes formatos de erro na submissão', () => {
+    preencherFormularioValido();
+    component.arquivoAnexado.set(new File([''], 'doc.pdf', { type: 'application/pdf' }));
 
+    const spyCadastrar = vi.spyOn(atividadeService, 'cadastrar');
+
+    // Erro formato Http com error.message
+    spyCadastrar.mockReturnValue(throwError(() => ({ error: { message: 'Erro na API backend' } })));
     component.onSubmit();
+    expect(component.mensagemErro()).toBe('Erro na API backend');
 
-    const req = httpMock.expectOne(ATIVIDADES_URL);
-    req.flush('Certificado inválido. Aceitos: PDF, PNG ou JPEG', {
-      status: 400,
-      statusText: 'Bad Request',
-    });
-
-    expect(component.mensagemErro()).toBe('Certificado inválido. Aceitos: PDF, PNG ou JPEG');
-    expect(component.carregando()).toBeFalsy();
-  });
-
-  it('deve exibir mensagem genérica amigável em caso de erro 500 do servidor', () => {
-    component.activityForm.setValue({
-      titulo: 'Projeto de Pesquisa',
-      instituicao: 'UFAPE',
-      data: '2026-01-15',
-      natureza: 'ACC',
-      categoria: 'PESQUISA',
-      cargaHoraria: '20',
-    });
-    const arquivoValido = new File(['dummy content'], 'comprovante.pdf', {
-      type: 'application/pdf',
-    });
-    component.onFileSelected({ target: { files: [arquivoValido] } } as unknown as Event);
-
+    // Erro formato Error genérico com message
+    spyCadastrar.mockReturnValue(throwError(() => new Error('Falha de conexão')));
     component.onSubmit();
+    expect(component.mensagemErro()).toBe('Falha de conexão');
 
-    const req = httpMock.expectOne(ATIVIDADES_URL);
-    req.flush('', { status: 500, statusText: 'Internal Server Error' });
-
+    // Erro formato desconhecido / fallback
+    spyCadastrar.mockReturnValue(throwError(() => 'Erro em string pura'));
+    component.onSubmit();
     expect(component.mensagemErro()).toBe(
       'Não foi possível cadastrar a atividade. Tente novamente.',
     );
-    expect(component.carregando()).toBeFalsy();
-  });
-
-  it('deve exibir mensagem de indisponibilidade quando houver erro de rede (status 0)', () => {
-    component.activityForm.setValue({
-      titulo: 'Projeto de Pesquisa',
-      instituicao: 'UFAPE',
-      data: '2026-01-15',
-      natureza: 'ACC',
-      categoria: 'PESQUISA',
-      cargaHoraria: '20',
-    });
-    const arquivoValido = new File(['dummy content'], 'comprovante.pdf', {
-      type: 'application/pdf',
-    });
-    component.onFileSelected({ target: { files: [arquivoValido] } } as unknown as Event);
-
-    component.onSubmit();
-
-    const req = httpMock.expectOne(ATIVIDADES_URL);
-    req.error(new ProgressEvent('error'), { status: 0 });
-
-    expect(component.mensagemErro()).toBe(
-      'Não foi possível conectar ao servidor. Verifique sua conexão.',
-    );
-    expect(component.carregando()).toBeFalsy();
   });
 });

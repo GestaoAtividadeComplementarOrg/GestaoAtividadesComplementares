@@ -1,19 +1,15 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ProgressoModalidade, ProgressoCargaHoraria } from './progresso.model';
+import { ProgressoCargaHoraria } from './progresso.model';
 import { ProgressoService } from './progresso.service';
-
-interface CardProgresso {
-  titulo: string;
-  descricao: string;
-  dados: ProgressoModalidade;
-}
+import { ProgressoCardComponent } from './progresso-card.component';
+import { ResumoModalidade } from './progresso-shared';
 
 @Component({
   selector: 'app-progresso',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ProgressoCardComponent],
   templateUrl: './progresso.component.html',
 })
 export class ProgressoComponent implements OnInit {
@@ -23,7 +19,7 @@ export class ProgressoComponent implements OnInit {
   readonly mensagemErro = signal<string | null>(null);
   readonly progresso = signal<ProgressoCargaHoraria | null>(null);
 
-  readonly cards = computed<CardProgresso[]>(() => {
+  readonly cards = computed<ResumoModalidade[]>(() => {
     const progresso = this.progresso();
     if (!progresso) {
       return [];
@@ -50,10 +46,6 @@ export class ProgressoComponent implements OnInit {
 
   ngOnInit(): void {
     this.buscarProgresso();
-  }
-
-  percentualExibido(dados: ProgressoModalidade): number {
-    return Math.min(100, Math.max(0, dados.percentualConcluido));
   }
 
   private buscarProgresso(): void {
