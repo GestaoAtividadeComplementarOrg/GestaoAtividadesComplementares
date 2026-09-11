@@ -1,16 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   ATIVIDADES_MOCK,
   SOLICITACOES_MOCK,
   REGULAMENTOS_MOCK,
-  CURSOS_MOCK,
-  USUARIOS_MOCK,
   gerarTokenMock,
   obterProgressoCalculado,
   obterRelatorioCalculado,
+  resetarAtividadesMock,
 } from './mock-data';
 
 describe('MockData', () => {
+  beforeEach(() => {
+    resetarAtividadesMock();
+  });
+
   it('deve exportar dados mock', () => {
     expect(ATIVIDADES_MOCK.length).toBeGreaterThan(0);
     expect(SOLICITACOES_MOCK.length).toBeGreaterThan(0);
