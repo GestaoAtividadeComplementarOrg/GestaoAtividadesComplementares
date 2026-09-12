@@ -18,7 +18,7 @@ describe('NavbarComponent', () => {
 
   const montar = (perfil: string | null) => {
     TestBed.resetTestingModule();
-    
+
     authServiceMock = {
       perfilAtual: signal<string | null>(perfil),
       isAuthenticated: vi.fn().mockReturnValue(perfil !== null),
