@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -96,7 +97,8 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao")).when(notificacaoRepository)
 				.save(any(Notificacao.class));
 
-		assertThrows(DataAccessResourceFailureException.class, () -> solicitacaoService.submeter(estudante.getId()));
+		Executable submeter = () -> solicitacaoService.submeter(estudante.getId());
+		assertThrows(DataAccessResourceFailureException.class, submeter);
 		TestTransaction.flagForCommit();
 		assertThrows(UnexpectedRollbackException.class, TestTransaction::end);
 		TestTransaction.start();
@@ -113,9 +115,9 @@ class SolicitacaoNotificacaoIntegracaoTest {
 		SolicitacaoValidacao solicitacao = solicitacaoService.submeter(estudante.getId());
 		doThrow(new DataAccessResourceFailureException("Falha ao gravar notificacao")).when(notificacaoRepository)
 				.save(any(Notificacao.class));
-
-		assertThrows(DataAccessResourceFailureException.class, () -> solicitacaoService.avaliar(solicitacao.getId(),
-				avaliador.getId(), DecisaoAvaliacao.APROVADA, null));
+		Executable avaliar = () -> solicitacaoService.avaliar(solicitacao.getId(), avaliador.getId(),
+				DecisaoAvaliacao.APROVADA, null);
+		assertThrows(DataAccessResourceFailureException.class, avaliar);
 		TestTransaction.flagForCommit();
 		assertThrows(UnexpectedRollbackException.class, TestTransaction::end);
 		TestTransaction.start();
