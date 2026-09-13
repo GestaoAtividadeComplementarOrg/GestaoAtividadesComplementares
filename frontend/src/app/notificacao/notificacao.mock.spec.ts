@@ -4,11 +4,11 @@ import { NOTIFICACOES_MOCK, resetarMocks } from './notificacao.mock';
 describe('NotificacaoMock', () => {
   it('deve exportar mock', () => {
     expect(NOTIFICACOES_MOCK).toBeDefined();
-    expect(NOTIFICACOES_MOCK.length).toBeGreaterThan(0);
+    expect(NOTIFICACOES_MOCK).toHaveLength(5);
   });
 
   it('deve resetar mocks', () => {
     resetarMocks();
-    expect(NOTIFICACOES_MOCK.length).toBe(5);
+    expect(NOTIFICACOES_MOCK).toHaveLength(5);
   });
 });
