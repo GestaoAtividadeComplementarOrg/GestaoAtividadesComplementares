@@ -84,7 +84,7 @@ describe('ListagemAtividadesComponent', () => {
     const itens = fixture.nativeElement.querySelectorAll('li');
     const texto = fixture.nativeElement.textContent as string;
     expect(fixture.componentInstance.carregando()).toBeFalsy();
-    expect(itens.length).toBe(2);
+    expect(itens).toHaveLength(2);
     expect(texto).toContain('Monitoria de Algoritmos');
     expect(texto).toContain('UFAPE');
     expect(texto).toContain('30h');
@@ -102,7 +102,7 @@ describe('ListagemAtividadesComponent', () => {
     await configurarComponente();
     fixture.detectChanges();
     const linksEdicao = fixture.nativeElement.querySelectorAll('a[href*="/atividades/edicao"]');
-    expect(linksEdicao.length).toBe(2);
+    expect(linksEdicao).toHaveLength(2);
     expect(linksEdicao[0].getAttribute('href')).toContain('/atividades/edicao/1');
     expect(linksEdicao[1].getAttribute('href')).toContain('/atividades/edicao/2');
   });
@@ -117,7 +117,7 @@ describe('ListagemAtividadesComponent', () => {
     const itens = fixture.nativeElement.querySelectorAll('li');
     const texto = fixture.nativeElement.textContent as string;
     expect(fixture.componentInstance.semAtividades()).toBeTruthy();
-    expect(itens.length).toBe(0);
+    expect(itens).toHaveLength(0);
     expect(texto).toContain('Você ainda não cadastrou atividades');
   });
 
@@ -331,7 +331,7 @@ describe('ListagemAtividadesComponent', () => {
       botaoExcluir?.click();
       f.detectChanges();
 
-      const dialogo = f.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+      const dialogo = f.nativeElement.querySelector('dialog') as HTMLElement;
       expect(dialogo).toBeTruthy();
       expect(dialogo.textContent).toContain('Excluir atividade');
       expect(dialogo.textContent).toContain('Esta ação não pode ser desfeita');
@@ -346,7 +346,7 @@ describe('ListagemAtividadesComponent', () => {
       botaoExcluir?.click();
       f.detectChanges();
 
-      const dialogo = f.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+      const dialogo = f.nativeElement.querySelector('dialog') as HTMLElement;
       const botoesDialogo = dialogo.querySelectorAll('button');
       const botaoCancelar = Array.from(botoesDialogo).find(
         (btn) => (btn as HTMLElement).textContent?.trim() === 'Cancelar',
@@ -355,7 +355,7 @@ describe('ListagemAtividadesComponent', () => {
       f.detectChanges();
 
       expect(duble.excluir).not.toHaveBeenCalled();
-      const dialogoAposCancel = f.nativeElement.querySelector('[role="dialog"]');
+      const dialogoAposCancel = f.nativeElement.querySelector('dialog');
       expect(dialogoAposCancel).toBeFalsy();
     });
 
@@ -395,7 +395,7 @@ describe('ListagemAtividadesComponent', () => {
       f.detectChanges();
 
       expect(f.componentInstance.excluindo()).toBe(true);
-      const dialogo = f.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+      const dialogo = f.nativeElement.querySelector('dialog') as HTMLElement;
       expect(dialogo).toBeTruthy();
       const botoes = dialogo.querySelectorAll('button');
       const todosDesabilitados = Array.from(botoes).every(

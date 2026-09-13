@@ -44,22 +44,15 @@ describe('NavbarComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('deve renderizar links de estudante para perfil ESTUDANTE', () => {
-    montar('ESTUDANTE');
-    expect(component).toBeTruthy();
-  });
+  it.each([['ESTUDANTE'], ['AVALIADOR'], ['ADMINISTRADOR']])(
+    'deve renderizar links para perfil %s',
+    (perfil) => {
+      montar(perfil as string);
+      expect(component).toBeTruthy();
+    },
+  );
 
-  it('deve renderizar links de avaliador para perfil AVALIADOR', () => {
-    montar('AVALIADOR');
-    expect(component).toBeTruthy();
-  });
-
-  it('deve renderizar links de gestao de usuarios e cursos para ADMINISTRADOR', () => {
-    montar('ADMINISTRADOR');
-    expect(component).toBeTruthy();
-  });
-
-  it('deve ocultar links restritos para visitante anonimo', () => {
+  it('deve ocultar links para visitante anonimo', () => {
     montar(null);
     expect(component).toBeTruthy();
   });

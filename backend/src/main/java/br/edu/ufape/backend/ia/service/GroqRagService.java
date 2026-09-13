@@ -195,7 +195,7 @@ public class GroqRagService {
 		try {
 			ResponseEntity<String> response = restTemplate.postForEntity(GROQ_URL, entity, String.class);
 			JsonNode root = objectMapper.readTree(response.getBody());
-			String rawText = root.path("choices").get(0).path("message").path("content").asText();
+			String rawText = root.path("choices").get(0).path("message").path(CONTENT).asText();
 			return processarRespostaResiliente(rawText, natureza, categoria, cargaHoraria);
 		} catch (Exception e) {
 			throw new IaProcessamentoException("Erro na comunicação com a API Groq: " + e.getMessage(), e);

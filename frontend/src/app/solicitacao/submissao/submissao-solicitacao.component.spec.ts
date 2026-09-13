@@ -43,7 +43,7 @@ describe('SubmissaoSolicitacaoComponent', () => {
     fixture.detectChanges();
 
     expect(chamou).toBe(false);
-    const dialogo = fixture.nativeElement.querySelector('[role="dialog"]');
+    const dialogo = fixture.nativeElement.querySelector('dialog');
     expect(dialogo).toBeTruthy();
     expect(dialogo.getAttribute('aria-modal')).toBe('true');
   });

@@ -9,6 +9,7 @@ import {
   ProgressoModalidadeDTO,
 } from './progresso.model';
 import { API_BASE_URL } from '../../api.config';
+import { mensagemDoBackend, traduzirErroComum } from '../../core/interceptors/erro-util';
 
 @Injectable({
   providedIn: 'root',
@@ -50,39 +51,15 @@ export class ProgressoService {
   // Traduz o erro de transporte para uma mensagem de dominio, para que os
   // componentes visuais nao precisem conhecer status HTTP.
   private traduzirErro(error: HttpErrorResponse): string {
-    if (error.status === 401) {
-      return 'Sessão expirada. Faça login novamente.';
-    }
-
-    // status 0 indica que a requisicao nao chegou ao servidor.
-    if (error.status === 0) {
-      return 'Não foi possível conectar ao servidor. Verifique sua conexão.';
-    }
+    const comum = traduzirErroComum(error);
+    if (comum) return comum;
 
     if (error.status === 403) {
       return (
-        this.mensagemDoBackend(error) ??
-        'Apenas estudantes podem consultar o progresso de atividades.'
+        mensagemDoBackend(error) ?? 'Apenas estudantes podem consultar o progresso de atividades.'
       );
     }
 
-    return (
-      this.mensagemDoBackend(error) ?? 'Não foi possível carregar seu progresso. Tente novamente.'
-    );
-  }
-
-  private mensagemDoBackend(error: HttpErrorResponse): string | null {
-    const corpo: unknown = error.error;
-
-    if (typeof corpo === 'string' && corpo.trim().length > 0) {
-      return corpo.trim();
-    }
-
-    const mensagem = (corpo as { message?: unknown } | null)?.message;
-    if (typeof mensagem === 'string' && mensagem.trim().length > 0) {
-      return mensagem.trim();
-    }
-
-    return null;
+    return mensagemDoBackend(error) ?? 'Não foi possível carregar seu progresso. Tente novamente.';
   }
 }

@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -56,7 +54,7 @@ class NotificacaoControllerTest {
 	@Test
 	@DisplayName("Retorna 200 com a lista de notificacoes do usuario autenticado")
 	void deveRetornar200ComLista() throws Exception {
-		when(facade.listar(eq(EMAIL), isNull())).thenReturn(List.of(notificacao(1L, false)));
+		when(facade.listar(EMAIL, null)).thenReturn(List.of(notificacao(1L, false)));
 
 		mockMvc.perform(get("/api/v1/notificacoes").principal(new UsernamePasswordAuthenticationToken(EMAIL, "pwd")))
 				.andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(1))
@@ -66,7 +64,7 @@ class NotificacaoControllerTest {
 	@Test
 	@DisplayName("Retorna 200 com lista vazia quando nao ha notificacoes")
 	void deveRetornar200ComListaVazia() throws Exception {
-		when(facade.listar(eq(EMAIL), isNull())).thenReturn(List.of());
+		when(facade.listar(EMAIL, null)).thenReturn(List.of());
 
 		mockMvc.perform(get("/api/v1/notificacoes").principal(new UsernamePasswordAuthenticationToken(EMAIL, "pwd")))
 				.andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$").isEmpty());
@@ -75,7 +73,7 @@ class NotificacaoControllerTest {
 	@Test
 	@DisplayName("Filtra apenas nao lidas quando apenasNaoLidas=true")
 	void deveFiltrarApenasNaoLidas() throws Exception {
-		when(facade.listar(eq(EMAIL), eq(true))).thenReturn(List.of(notificacao(2L, false)));
+		when(facade.listar(EMAIL, true)).thenReturn(List.of(notificacao(2L, false)));
 
 		mockMvc.perform(get("/api/v1/notificacoes").param("apenasNaoLidas", "true")
 				.principal(new UsernamePasswordAuthenticationToken(EMAIL, "pwd"))).andExpect(status().isOk())

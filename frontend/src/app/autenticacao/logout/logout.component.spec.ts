@@ -79,8 +79,8 @@ describe('Componente de Logout', () => {
 
     // Assert
     expect(logoutServiceSpy.logout).toHaveBeenCalled();
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
+    expect(localStorage).toHaveLength(0);
+    expect(sessionStorage).toHaveLength(0);
     expect(authService.isAuthenticated()).toBeFalsy();
   });
 
@@ -104,8 +104,8 @@ describe('Componente de Logout', () => {
     component.onConfirmLogout();
 
     // Assert
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
+    expect(localStorage).toHaveLength(0);
+    expect(sessionStorage).toHaveLength(0);
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { replaceUrl: true });
   });
 });

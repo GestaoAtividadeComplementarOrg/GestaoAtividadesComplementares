@@ -128,7 +128,7 @@ describe('ListaNotificacoesComponent', () => {
 
     expect(spyMarcarTodas).toHaveBeenCalled();
     const naoLidas = fixture.componentInstance.notificacoes().filter((n) => !n.lida);
-    expect(naoLidas.length).toBe(0);
+    expect(naoLidas).toHaveLength(0);
   });
 
   it('deve exibir link para /solicitacoes quando solicitacaoId estiver preenchido e ocultar quando nulo', () => {
@@ -136,7 +136,7 @@ describe('ListaNotificacoesComponent', () => {
     fixture.detectChanges();
 
     const links = fixture.nativeElement.querySelectorAll('a[href="/solicitacoes"]');
-    expect(links.length).toBe(1);
+    expect(links).toHaveLength(1);
     expect(links[0].textContent).toContain('Ver solicitação');
   });
 });

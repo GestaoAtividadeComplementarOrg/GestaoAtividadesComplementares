@@ -28,7 +28,7 @@ describe('SolicitacaoService', () => {
   });
 
   it('deve listar solicitacoes', () => {
-    service.listar().subscribe((res) => expect(res.length).toBe(1));
+    service.listar().subscribe((res) => expect(res).toHaveLength(1));
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('GET');
     req.flush([{ id: 1 }]);

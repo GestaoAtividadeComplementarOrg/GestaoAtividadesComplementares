@@ -77,7 +77,10 @@
 
       <!-- Upload Dropzone -->
       <div class="space-y-2">
-        <label class="block text-xs font-bold text-[#191c1d] uppercase tracking-wider">
+        <label
+          for="arquivo-normativo"
+          class="block text-xs font-bold text-[#191c1d] uppercase tracking-wider"
+        >
           Documento Normativo Oficial (PDF ou TXT)
         </label>
 
@@ -93,6 +96,7 @@
             }"
           >
             <input
+              id="arquivo-normativo"
               type="file"
               accept=".pdf,.txt"
               (change)="aoSelecionarArquivo($event)"

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { API_BASE_URL } from '../api.config';
+import { mensagemDoBackend, traduzirErroComum } from '../core/interceptors/erro-util';
 import { ContagemNaoLidas, Notificacao } from './notificacao.model';
 
 @Injectable({
@@ -57,24 +58,12 @@ export class NotificacaoService {
   }
 
   private traduzirErro(error: HttpErrorResponse): string {
-    if (error.status === 401) return 'Sessão expirada. Faça login novamente.';
-    if (error.status === 0) return 'Não foi possível conectar ao servidor. Verifique sua conexão.';
+    const comum = traduzirErroComum(error);
+    if (comum) return comum;
     if (error.status === 403) return 'Acesso negado às notificações.';
-    if (error.status === 404) return this.mensagemDoBackend(error) ?? 'Notificação não encontrada.';
+    if (error.status === 404) return mensagemDoBackend(error) ?? 'Notificação não encontrada.';
     return (
-      this.mensagemDoBackend(error) ?? 'Não foi possível carregar as notificações. Tente novamente.'
+      mensagemDoBackend(error) ?? 'Não foi possível carregar as notificações. Tente novamente.'
     );
-  }
-
-  private mensagemDoBackend(error: HttpErrorResponse): string | null {
-    const corpo: unknown = error.error;
-    if (typeof corpo === 'string' && corpo.trim().length > 0) {
-      return corpo.trim();
-    }
-    const mensagem = (corpo as { message?: unknown } | null)?.message;
-    if (typeof mensagem === 'string' && mensagem.trim().length > 0) {
-      return mensagem.trim();
-    }
-    return null;
   }
 }
