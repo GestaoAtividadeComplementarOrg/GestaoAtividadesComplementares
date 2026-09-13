@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { NOTIFICACOES_MOCK, resetarMocks } from './notificacao.mock';
 
 describe('NotificacaoMock', () => {
+  beforeEach(() => resetarMocks());
+
   it('deve exportar mock', () => {
     expect(NOTIFICACOES_MOCK).toBeDefined();
     expect(NOTIFICACOES_MOCK).toHaveLength(5);
