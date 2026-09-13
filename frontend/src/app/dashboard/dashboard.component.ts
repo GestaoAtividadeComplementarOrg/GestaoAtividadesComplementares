@@ -2,14 +2,20 @@ import { SituacaoSolicitacaoComponent } from './situacao-solicitacao/situacao-so
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FooterComponent } from '../core/components/footer/footer.component';
 import { ProgressoCargaHoraria } from '../atividades/progresso/progresso.model';
 import { ProgressoService } from '../atividades/progresso/progresso.service';
-import { ResumoModalidade, percentualExibido } from '../atividades/progresso/progresso-shared';
+import {
+  ResumoModalidade,
+  percentualExibido,
+  calcularResumos,
+  calcularSemAtividades,
+} from '../atividades/progresso/progresso-shared';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, SituacaoSolicitacaoComponent],
+  imports: [CommonModule, RouterLink, SituacaoSolicitacaoComponent, FooterComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
@@ -19,30 +25,9 @@ export class DashboardComponent implements OnInit {
   readonly mensagemErro = signal<string | null>(null);
   readonly progresso = signal<ProgressoCargaHoraria | null>(null);
 
-  readonly resumos = computed<ResumoModalidade[]>(() => {
-    const progresso = this.progresso();
-    if (!progresso) {
-      return [];
-    }
-    return [
-      { titulo: 'ACC', descricao: 'Atividades Complementares de Curso', dados: progresso.acc },
-      { titulo: 'ACEX', descricao: 'Atividades de Extensão', dados: progresso.acex },
-    ];
-  });
+  readonly resumos = computed<ResumoModalidade[]>(() => calcularResumos(this.progresso()));
 
-  readonly semAtividades = computed<boolean>(() => {
-    const progresso = this.progresso();
-    if (!progresso) {
-      return false;
-    }
-    return (
-      progresso.acc.horasAcumuladas +
-        progresso.acc.horasPendentes +
-        progresso.acex.horasAcumuladas +
-        progresso.acex.horasPendentes ===
-      0
-    );
-  });
+  readonly semAtividades = computed<boolean>(() => calcularSemAtividades(this.progresso()));
 
   ngOnInit(): void {
     this.buscarProgresso();

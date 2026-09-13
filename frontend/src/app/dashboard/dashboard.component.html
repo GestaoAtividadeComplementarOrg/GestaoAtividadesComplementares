@@ -113,19 +113,18 @@
                 >
                 <span class="text-[#707974]"> de {{ resumo.dados.horasExigidas }}h exigidas</span>
               </p>
-              <div
+              <progress
                 class="w-full h-3 bg-[#f3f4f5] rounded-full overflow-hidden"
-                role="progressbar"
                 [attr.aria-label]="'Progresso de ' + resumo.titulo"
-                [attr.aria-valuenow]="percentualExibido(resumo.dados)"
-                aria-valuemin="0"
-                aria-valuemax="100"
+                [attr.value]="percentualExibido(resumo.dados)"
+                min="0"
+                max="100"
               >
                 <div
                   class="h-full bg-[#003629] rounded-full transition-all"
                   [style.width.%]="percentualExibido(resumo.dados)"
                 ></div>
-              </div>
+              </progress>
               <div class="flex justify-between items-center mt-2 text-xs text-[#404945]">
                 <span class="text-[11px] text-[#707974]"
                   >Faltam {{ resumo.dados.horasRestantes }}h</span
@@ -168,16 +167,5 @@
     </div>
   </main>
 
-  <footer class="bg-[#e1e3e4] border-t border-[#c0c9c3] mt-auto">
-    <div
-      class="w-full py-6 px-4 md:px-8 max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#404945]"
-    >
-      <div class="flex items-center gap-2 font-bold text-[#003629]">
-        <span>SGAC</span>
-      </div>
-      <p class="text-center">
-        © 2026 SGAC - Universidade Federal do Agreste de Pernambuco. Todos os direitos reservados.
-      </p>
-    </div>
-  </footer>
+  <app-footer></app-footer>
 </div>
