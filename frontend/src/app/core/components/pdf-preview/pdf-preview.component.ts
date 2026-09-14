@@ -5,7 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   selector: 'app-pdf-preview',
   standalone: true,
   template: `
-    <div class="w-full min-h-[75vh] h-full">
+    <div class="w-full min-h-[80vh] h-[85vh]">
       <iframe
         [src]="safeUrl"
         class="w-full h-full rounded-lg border border-outline-variant bg-white shadow-inner"
