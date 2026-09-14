@@ -47,7 +47,7 @@ describe('GestaoCursosComponent', () => {
   it('deve carregar a lista de cursos parametrizados', () => {
     expect(component).toBeTruthy();
     expect(adminServiceSpy.listarCursos).toHaveBeenCalled();
-    expect(component.cursos().length).toBe(1);
+    expect(component.cursos()).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('Ciência da Computação');
   });
 
@@ -87,7 +87,9 @@ describe('GestaoCursosComponent', () => {
 
   it('deve mostrar erro ao criar curso', () => {
     adminServiceSpy.criarCurso.mockReturnValue(of(new Error('Erro')));
+
     component.abrirModalNovo();
+
     component.formCurso.setValue({
       nome: 'Teste',
       codigo: 'TST',
@@ -95,7 +97,10 @@ describe('GestaoCursosComponent', () => {
       horasAcexExigidas: 320,
       ativo: true,
     });
+
     component.salvar();
+
+    expect(adminServiceSpy.criarCurso).toHaveBeenCalled();
   });
 
   it('não deve salvar se o formulário for inválido', () => {

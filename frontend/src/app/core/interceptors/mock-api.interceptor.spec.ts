@@ -221,7 +221,7 @@ describe('mockApiInterceptor - Cobertura Total 100%', () => {
         todas = res;
       });
       vi.advanceTimersByTime(250);
-      expect(todas.length).toBe(2);
+      expect(todas).toHaveLength(2);
 
       let filtradas: any;
       http
@@ -230,7 +230,7 @@ describe('mockApiInterceptor - Cobertura Total 100%', () => {
           filtradas = res;
         });
       vi.advanceTimersByTime(250);
-      expect(filtradas.length).toBe(1);
+      expect(filtradas).toHaveLength(1);
     });
 
     it('deve cadastrar nova atividade com FormData e corpo vazio (fallbacks)', () => {
@@ -336,14 +336,14 @@ describe('mockApiInterceptor - Cobertura Total 100%', () => {
       let lista: any;
       http.get('/solicitacoes/avaliacao').subscribe((res) => (lista = res));
       vi.advanceTimersByTime(250);
-      expect(lista.length).toBe(1);
+      expect(lista).toHaveLength(1);
 
       let listaFiltrada: any;
       http
         .get('/solicitacoes/avaliacao', { params: { status: 'SUBMETIDA' } })
         .subscribe((res) => (listaFiltrada = res));
       vi.advanceTimersByTime(250);
-      expect(listaFiltrada.length).toBe(0);
+      expect(listaFiltrada).toHaveLength(0);
     });
 
     it('deve detalhar e avaliar solicitação (/avaliacao)', () => {
@@ -377,7 +377,7 @@ describe('mockApiInterceptor - Cobertura Total 100%', () => {
       let resumos: any;
       http.get('/solicitacoes').subscribe((res) => (resumos = res));
       vi.advanceTimersByTime(250);
-      expect(resumos.length).toBe(1);
+      expect(resumos).toHaveLength(1);
 
       ATIVIDADES_MOCK.length = 0;
       ATIVIDADES_MOCK.push({
@@ -506,7 +506,7 @@ describe('mockApiInterceptor - Cobertura Total 100%', () => {
         .get('/notificacoes', { params: { apenasNaoLidas: 'true' } })
         .subscribe((res) => (apenasNaoLidas = res));
       vi.advanceTimersByTime(250);
-      expect(apenasNaoLidas.length).toBe(1);
+      expect(apenasNaoLidas).toHaveLength(1);
 
       let itemLido: any;
       http.patch('/notificacoes/1/leitura', {}).subscribe((res) => (itemLido = res));

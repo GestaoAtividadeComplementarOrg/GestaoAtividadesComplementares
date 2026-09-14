@@ -3,7 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { BehaviorSubject } from 'rxjs';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { NavbarComponent } from './navbar.component';
 import { AutenticacaoService } from '../../../autenticacao/autenticacao.service';
 
@@ -14,15 +15,18 @@ describe('NavbarComponent', () => {
     perfilAtual: ReturnType<typeof signal>;
     isAuthenticated: ReturnType<typeof vi.fn>;
     encerrarSessao: ReturnType<typeof vi.fn>;
+    authObservable: BehaviorSubject<boolean>;
   };
 
   const montar = (perfil: string | null) => {
     TestBed.resetTestingModule();
-    
+
+    const isAuth = perfil !== null;
     authServiceMock = {
       perfilAtual: signal<string | null>(perfil),
-      isAuthenticated: vi.fn().mockReturnValue(perfil !== null),
+      isAuthenticated: vi.fn().mockReturnValue(isAuth),
       encerrarSessao: vi.fn(),
+      authObservable: new BehaviorSubject<boolean>(isAuth),
     };
 
     TestBed.configureTestingModule({
@@ -44,22 +48,15 @@ describe('NavbarComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('deve renderizar links de estudante para perfil ESTUDANTE', () => {
-    montar('ESTUDANTE');
-    expect(component).toBeTruthy();
-  });
+  it.each([['ESTUDANTE'], ['AVALIADOR'], ['ADMINISTRADOR']])(
+    'deve renderizar links para perfil %s',
+    (perfil) => {
+      montar(perfil as string);
+      expect(component).toBeTruthy();
+    },
+  );
 
-  it('deve renderizar links de avaliador para perfil AVALIADOR', () => {
-    montar('AVALIADOR');
-    expect(component).toBeTruthy();
-  });
-
-  it('deve renderizar links de gestao de usuarios e cursos para ADMINISTRADOR', () => {
-    montar('ADMINISTRADOR');
-    expect(component).toBeTruthy();
-  });
-
-  it('deve ocultar links restritos para visitante anonimo', () => {
+  it('deve ocultar links para visitante anonimo', () => {
     montar(null);
     expect(component).toBeTruthy();
   });

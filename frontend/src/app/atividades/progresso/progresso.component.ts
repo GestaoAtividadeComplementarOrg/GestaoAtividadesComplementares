@@ -4,12 +4,22 @@ import { RouterLink } from '@angular/router';
 import { ProgressoCargaHoraria } from './progresso.model';
 import { ProgressoService } from './progresso.service';
 import { ProgressoCardComponent } from './progresso-card.component';
-import { ResumoModalidade } from './progresso-shared';
+import { FooterComponent } from '../../core/components/footer/footer.component';
+import { LoadingSpinnerComponent } from '../../core/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../core/components/empty-state/empty-state.component';
+import { ResumoModalidade, calcularResumos, calcularSemAtividades } from './progresso-shared';
 
 @Component({
   selector: 'app-progresso',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProgressoCardComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ProgressoCardComponent,
+    FooterComponent,
+    LoadingSpinnerComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './progresso.component.html',
 })
 export class ProgressoComponent implements OnInit {
@@ -19,30 +29,9 @@ export class ProgressoComponent implements OnInit {
   readonly mensagemErro = signal<string | null>(null);
   readonly progresso = signal<ProgressoCargaHoraria | null>(null);
 
-  readonly cards = computed<ResumoModalidade[]>(() => {
-    const progresso = this.progresso();
-    if (!progresso) {
-      return [];
-    }
-    return [
-      { titulo: 'ACC', descricao: 'Atividades Complementares de Curso', dados: progresso.acc },
-      { titulo: 'ACEX', descricao: 'Atividades de Extensão', dados: progresso.acex },
-    ];
-  });
+  readonly cards = computed<ResumoModalidade[]>(() => calcularResumos(this.progresso()));
 
-  readonly semAtividades = computed<boolean>(() => {
-    const progresso = this.progresso();
-    if (!progresso) {
-      return false;
-    }
-    return (
-      progresso.acc.horasAcumuladas +
-        progresso.acc.horasPendentes +
-        progresso.acex.horasAcumuladas +
-        progresso.acex.horasPendentes ===
-      0
-    );
-  });
+  readonly semAtividades = computed<boolean>(() => calcularSemAtividades(this.progresso()));
 
   ngOnInit(): void {
     this.buscarProgresso();

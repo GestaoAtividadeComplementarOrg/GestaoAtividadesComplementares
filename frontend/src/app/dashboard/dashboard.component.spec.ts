@@ -156,8 +156,8 @@ describe('DashboardComponent', () => {
     responderCom(dtoForaDaFaixa);
 
     // Assert
-    const barras = Array.from(elemento.querySelectorAll('[role="progressbar"]'));
-    expect(barras.map((b) => b.getAttribute('aria-valuenow'))).toEqual(['100', '0']);
+    const barras = Array.from(elemento.querySelectorAll('progress'));
+    expect(barras.map((b) => b.getAttribute('value'))).toEqual(['100', '0']);
     expect(elemento.textContent).not.toContain('140%');
     expect(elemento.textContent).not.toContain('-20%');
   });
@@ -171,7 +171,7 @@ describe('DashboardComponent', () => {
     responderCom(dtoCompleto);
 
     // Assert
-    const rotulos = Array.from(elemento.querySelectorAll('[role="progressbar"]')).map((b) =>
+    const rotulos = Array.from(elemento.querySelectorAll('progress')).map((b) =>
       b.getAttribute('aria-label'),
     );
     expect(rotulos).toEqual(['Progresso de ACC', 'Progresso de ACEX']);

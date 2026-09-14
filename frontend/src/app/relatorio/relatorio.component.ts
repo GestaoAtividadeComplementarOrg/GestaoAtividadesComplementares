@@ -33,12 +33,21 @@ export class RelatorioComponent implements OnInit {
   carregarRelatorio(): void {
     this.carregando.set(true);
     this.mensagemErro.set(null);
+    // Timeout de segurança para evitar carregamento infinito
+    const timeoutId = setTimeout(() => {
+      if (this.carregando()) {
+        this.mensagemErro.set('Tempo esgotado ao carregar o relatório. Tente novamente.');
+        this.carregando.set(false);
+      }
+    }, 8000);
     this.relatorioService.obterRelatorio().subscribe({
       next: (relatorio) => {
+        clearTimeout(timeoutId);
         this.relatorio.set(relatorio);
         this.carregando.set(false);
       },
       error: (erro: Error) => {
+        clearTimeout(timeoutId);
         this.mensagemErro.set(erro.message);
         this.carregando.set(false);
       },

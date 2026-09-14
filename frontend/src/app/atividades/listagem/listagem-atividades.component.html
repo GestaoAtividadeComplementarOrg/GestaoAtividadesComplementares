@@ -1,29 +1,50 @@
-<div class="bg-[#f8f9fa] min-h-screen flex flex-col font-sans text-[#191c1d] antialiased">
+<div class="bg-background min-h-screen flex flex-col font-sans text-on-surface antialiased">
   <main class="flex-grow p-4 md:p-8">
     <div class="w-full max-w-4xl mx-auto">
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-[#191c1d] tracking-tight mb-1">Minhas Atividades</h1>
-          <p class="text-sm text-[#404945]">Atividades complementares que você cadastrou</p>
+          <h1 class="text-2xl font-bold text-on-surface tracking-tight mb-1">Minhas Atividades</h1>
+          <p class="text-sm text-on-surface-variant">
+            Atividades complementares que você cadastrou
+          </p>
         </div>
         <a
           routerLink="/atividades/cadastro"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-[#003629] text-white text-xs font-semibold rounded-lg hover:bg-[#1b4d3e] transition-colors self-start sm:self-auto"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-primary-container text-white text-xs font-semibold rounded-lg hover:bg-primary transition-colors self-start sm:self-auto"
         >
           <span>+ Cadastrar Atividade</span>
         </a>
       </div>
 
+      <section
+        aria-label="Busca por texto"
+        class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant p-4 mb-4"
+      >
+        <label
+          for="filtro-texto"
+          class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1"
+          >Busca</label
+        >
+        <input
+          id="filtro-texto"
+          type="text"
+          placeholder="Buscar por título ou instituição..."
+          [value]="filtroTexto()"
+          (input)="aoAlterarTexto($event)"
+          class="w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20"
+        />
+      </section>
+
       <!-- Barra de Filtros -->
       <section
         aria-label="Filtros de atividades"
-        class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-[#e1e3e4] p-4 mb-6"
+        class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant p-4 mb-6"
       >
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <div class="flex-1">
             <label
               for="filtro-natureza"
-              class="block text-xs font-semibold uppercase tracking-wider text-[#404945] mb-1"
+              class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1"
             >
               Natureza
             </label>
@@ -31,7 +52,7 @@
               id="filtro-natureza"
               [value]="filtroNatureza()"
               (change)="aoAlterarNatureza($event)"
-              class="w-full bg-[#f8f9fa] border border-[#c0c9c3] rounded-lg px-3 py-2 text-sm text-[#191c1d] focus:outline-none focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20"
+              class="w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20"
             >
               @for (opcao of opcoesNatureza; track opcao.valor) {
                 <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
@@ -41,7 +62,7 @@
           <div class="flex-1">
             <label
               for="filtro-categoria"
-              class="block text-xs font-semibold uppercase tracking-wider text-[#404945] mb-1"
+              class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1"
             >
               Categoria
             </label>
@@ -49,7 +70,7 @@
               id="filtro-categoria"
               [value]="filtroCategoria()"
               (change)="aoAlterarCategoria($event)"
-              class="w-full bg-[#f8f9fa] border border-[#c0c9c3] rounded-lg px-3 py-2 text-sm text-[#191c1d] focus:outline-none focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20"
+              class="w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20"
             >
               @for (opcao of opcoesCategoria; track opcao.valor) {
                 <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
@@ -62,7 +83,7 @@
                 type="button"
                 id="btn-limpar-filtros"
                 (click)="limparFiltros()"
-                class="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-[#ba1a1a] border border-[#ba1a1a]/30 rounded-lg hover:bg-[#ffdad6]/20 transition-colors"
+                class="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-error border border-error/30 rounded-lg hover:bg-error-container/20 transition-colors"
               >
                 Limpar filtros
               </button>
@@ -73,8 +94,8 @@
 
       @if (mensagemSucesso()) {
         <div
-          class="text-sm text-[#404945]"
-          class="mb-4 p-3 bg-[#e6efe9] text-[#003629] rounded-lg border border-[#c0c9c3] text-sm"
+          class="text-sm text-on-surface-variant"
+          class="mb-4 p-3 bg-surface-container-low text-primary rounded-lg border border-outline-variant text-sm"
         >
           {{ mensagemSucesso() }}
         </div>
@@ -83,7 +104,7 @@
       @if (mensagemErroExclusao()) {
         <div
           role="alert"
-          class="mb-4 p-3 bg-[#ffdad6] text-[#93000a] rounded-lg border border-[#ba1a1a]/20 text-sm"
+          class="mb-4 p-3 bg-error-container text-on-error-container rounded-lg border border-error/20 text-sm"
         >
           {{ mensagemErroExclusao() }}
         </div>
@@ -91,10 +112,10 @@
 
       @if (carregando()) {
         <div
-          class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-[#e1e3e4] p-10 flex flex-col items-center justify-center gap-3 text-[#404945]"
+          class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant p-10 flex flex-col items-center justify-center gap-3 text-on-surface-variant"
         >
           <svg
-            class="animate-spin h-8 w-8 text-[#003629]"
+            class="animate-spin h-8 w-8 text-primary"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -118,11 +139,11 @@
       } @else if (mensagemErro()) {
         <div
           role="alert"
-          class="mb-6 p-4 bg-[#ffdad6] text-[#93000a] rounded-lg flex items-start gap-3 border border-[#ba1a1a]/20 text-sm"
+          class="mb-6 p-4 bg-error-container text-on-error-container rounded-lg flex items-start gap-3 border border-error/20 text-sm"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5 shrink-0 text-[#ba1a1a] mt-0.5"
+            class="w-5 h-5 shrink-0 text-error mt-0.5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -147,11 +168,11 @@
         </div>
       } @else if (semAtividades()) {
         <div
-          class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-[#e1e3e4] p-10 flex flex-col items-center justify-center gap-3 text-center"
+          class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant p-10 flex flex-col items-center justify-center gap-3 text-primaryenter"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="w-10 h-10 text-[#003629]"
+            class="w-10 h-10 text-primary"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -164,22 +185,22 @@
             />
           </svg>
           @if (temFiltroAtivo()) {
-            <p class="text-sm font-semibold text-[#191c1d]">
+            <p class="text-sm font-semibold text-on-surface">
               Nenhuma atividade encontrada com os filtros selecionados
             </p>
-            <p class="text-sm text-[#404945]">
+            <p class="text-sm text-on-surface-variant">
               Tente alterar ou limpar os filtros para ver outras atividades.
             </p>
             <button
               type="button"
               (click)="limparFiltros()"
-              class="mt-2 px-3 py-1.5 text-xs font-semibold text-[#003629] border border-[#003629] rounded-lg hover:bg-[#f3f4f5] transition-colors"
+              class="mt-2 px-3 py-1.5 text-xs font-semibold text-primary border border-[#003629] rounded-lg hover:bg-surface-container-low transition-colors"
             >
               Limpar filtros
             </button>
           } @else {
-            <p class="text-sm font-semibold text-[#191c1d]">Você ainda não cadastrou atividades</p>
-            <p class="text-sm text-[#404945]">
+            <p class="text-sm font-semibold text-on-surface">Você ainda não cadastrou atividades</p>
+            <p class="text-sm text-on-surface-variant">
               Cadastre sua primeira atividade complementar para acompanhá-la aqui.
             </p>
           }
@@ -188,37 +209,39 @@
         <ul class="flex flex-col gap-4">
           @for (atividade of atividades(); track atividade.id) {
             <li
-              class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-[#e1e3e4] p-5"
+              class="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant p-5"
             >
               <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <h2 class="text-base font-bold text-[#191c1d] truncate">
+                  <h2 class="text-base font-bold text-on-surface truncate">
                     {{ atividade.titulo }}
                   </h2>
-                  <p class="text-xs text-[#404945] mt-1">{{ atividade.instituicaoResponsavel }}</p>
+                  <p class="text-xs text-on-surface-variant mt-1">
+                    {{ atividade.instituicaoResponsavel }}
+                  </p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <span
-                    class="inline-flex items-center text-[11px] font-semibold bg-[#e6efe9] text-[#003629] border border-[#c0c9c3] px-2.5 py-0.5 rounded-full"
+                    class="inline-flex items-center text-[11px] font-semibold bg-surface-container-low text-primary border border-outline-variant px-2.5 py-0.5 rounded-full"
                   >
                     {{ rotuloNatureza(atividade.natureza) }}
                   </span>
                   <span
-                    class="inline-flex items-center text-[11px] font-semibold bg-[#f3f4f5] text-[#404945] border border-[#c0c9c3] px-2.5 py-0.5 rounded-full"
+                    class="inline-flex items-center text-[11px] font-semibold bg-surface-container-low text-on-surface-variant border border-outline-variant px-2.5 py-0.5 rounded-full"
                   >
                     {{ rotuloCategoria(atividade.categoria) }}
                   </span>
                   <button
                     type="button"
                     (click)="abrirModalParecer(atividade)"
-                    class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#003629] bg-[#e6efe9] border border-[#c0c9c3] rounded-lg hover:bg-[#003629] hover:text-white transition-colors"
+                    class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-primary bg-surface-container-low border border-outline-variant rounded-lg hover:bg-primary-container hover:text-white transition-colors"
                   >
                     <span class="material-symbols-outlined text-[16px]">psychology</span>
                     <span>Parecer IA</span>
                   </button>
                   <a
                     [routerLink]="['/atividades/edicao', atividade.id]"
-                    class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#003629] border border-[#003629] rounded-lg hover:bg-[#003629] hover:text-white transition-colors"
+                    class="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-primary border border-[#003629] rounded-lg hover:bg-primary-container hover:text-white transition-colors"
                     [attr.aria-label]="'Editar atividade ' + atividade.titulo"
                   >
                     <span class="material-symbols-outlined text-[16px]">edit</span>
@@ -227,21 +250,25 @@
                 </div>
               </div>
               <div
-                class="grid grid-cols-2 gap-1 text-center mt-4 bg-[#f8f9fa] p-3 rounded-lg border border-[#e1e3e4]"
+                class="grid grid-cols-2 gap-1 text-primaryenter mt-4 bg-background p-3 rounded-lg border border-surface-variant"
               >
                 <div>
-                  <p class="text-base font-bold text-[#003629]">
+                  <p class="text-base font-bold text-primary">
                     {{ atividade.cargaHorariaEmHoras }}h
                   </p>
-                  <p class="text-[9px] uppercase tracking-wider text-[#707974] font-semibold">
+                  <p
+                    class="text-[9px] uppercase tracking-wider text-on-surface-variant font-semibold"
+                  >
                     Carga Horária
                   </p>
                 </div>
                 <div>
-                  <p class="text-base font-bold text-[#191c1d]">
+                  <p class="text-base font-bold text-on-surface">
                     {{ dataFormatada(atividade.dataRealizacao) }}
                   </p>
-                  <p class="text-[9px] uppercase tracking-wider text-[#707974] font-semibold">
+                  <p
+                    class="text-[9px] uppercase tracking-wider text-on-surface-variant font-semibold"
+                  >
                     Realização
                   </p>
                 </div>
@@ -249,7 +276,7 @@
               <div class="flex justify-end mt-3">
                 <button
                   type="button"
-                  class="px-3 py-1.5 text-xs font-semibold text-[#93000a] border border-[#ba1a1a]/30 rounded-lg hover:bg-[#ffdad6] transition-colors"
+                  class="px-3 py-1.5 text-xs font-semibold text-on-error-container border border-error/30 rounded-lg hover:bg-error-container transition-colors"
                   (click)="solicitarExclusao(atividade)"
                 >
                   Excluir
@@ -263,24 +290,22 @@
 
     <!-- Modal de Confirmação de Exclusão -->
     @if (atividadeParaExcluir(); as alvo) {
-      <div class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titulo-confirmacao-exclusao"
-          class="bg-white rounded-xl shadow-lg border border-[#e1e3e4] p-6 max-w-md w-full"
+      <div class="fixed inset-0 bg-backgroundlack/40 flex items-center justify-center p-4 z-50">
+        <dialog
+          class="bg-white rounded-xl shadow-lg border border-surface-variant p-6 max-w-md w-full"
+          open
         >
-          <h2 id="titulo-confirmacao-exclusao" class="text-base font-bold text-[#191c1d]">
+          <h2 id="titulo-confirmacao-exclusao" class="text-base font-bold text-on-surface">
             Excluir atividade
           </h2>
-          <p class="text-sm text-[#404945] mt-2">
+          <p class="text-sm text-on-surface-variant mt-2">
             Tem certeza que deseja excluir "{{ alvo.titulo }}"? Esta ação não pode ser desfeita.
           </p>
           <div class="flex justify-end gap-2 mt-5">
             <button
               type="button"
               [disabled]="excluindo()"
-              class="px-4 py-2 text-xs font-semibold text-[#404945] border border-[#c0c9c3] rounded-lg hover:bg-[#f3f4f5] transition-colors disabled:opacity-60"
+              class="px-4 py-2 text-xs font-semibold text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors disabled:opacity-60"
               (click)="cancelarExclusao()"
             >
               Cancelar
@@ -294,31 +319,35 @@
               {{ excluindo() ? 'Excluindo...' : 'Excluir' }}
             </button>
           </div>
-        </div>
+        </dialog>
       </div>
     }
 
     <!-- Modal Parecer IA com Componente Reutilizável -->
     @if (modalParecerAberto()) {
       <div
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn"
+        class="fixed inset-0 bg-backgroundlack/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn"
         (click)="fecharModalParecer()"
+        (keydown.escape)="fecharModalParecer()"
       >
         <div
-          class="bg-white rounded-2xl border border-[#c0c9c3] shadow-2xl p-6 max-w-lg w-full space-y-4"
+          class="bg-white rounded-2xl border border-outline-variant shadow-2xl p-6 max-w-lg w-full space-y-4"
           (click)="$event.stopPropagation()"
+          (keydown.escape)="fecharModalParecer()"
         >
-          <div class="flex items-center justify-between border-b border-[#e1e3e4] pb-3">
+          <div class="flex items-center justify-between border-b border-surface-variant pb-3">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-2xl text-[#003629]">verified_user</span>
+              <span class="material-symbols-outlined text-2xl text-primary">verified_user</span>
               <div>
-                <h3 class="text-base font-bold text-[#191c1d]">Parecer Técnico de Conformidade</h3>
-                <p class="text-[11px] text-[#707974]">Auditoria Regulamentar Automática (UFAPE)</p>
+                <h3 class="text-base font-bold text-on-surface">Parecer Técnico de Conformidade</h3>
+                <p class="text-[11px] text-on-surface-variant">
+                  Auditoria Regulamentar Automática (UFAPE)
+                </p>
               </div>
             </div>
             <button
               (click)="fecharModalParecer()"
-              class="p-1 hover:bg-[#f3f4f5] rounded-full text-[#707974]"
+              class="p-1 hover:bg-surface-container-low rounded-full text-on-surface-variant"
               aria-label="Fechar modal"
             >
               <span class="material-symbols-outlined">close</span>
@@ -326,15 +355,17 @@
           </div>
 
           @if (carregandoParecer()) {
-            <div class="flex flex-col items-center justify-center py-8 gap-3 text-[#404945]">
-              <span class="material-symbols-outlined animate-spin text-3xl text-[#003629]"
+            <div
+              class="flex flex-col items-center justify-center py-8 gap-3 text-on-surface-variant"
+            >
+              <span class="material-symbols-outlined animate-spin text-3xl text-primary"
                 >progress_activity</span
               >
               <p class="text-xs font-medium">Consultando o regulamento da UFAPE com a IA...</p>
             </div>
           } @else if (erroParecer()) {
             <div
-              class="p-4 bg-[#ffdad6] text-[#93000a] rounded-xl text-xs font-medium flex items-start gap-2 border border-[#ba1a1a]/20"
+              class="p-4 bg-error-container text-on-error-container rounded-xl text-xs font-medium flex items-start gap-2 border border-error/20"
             >
               <span class="material-symbols-outlined text-sm mt-0.5">error</span>
               <div>
@@ -350,14 +381,14 @@
     }
   </main>
 
-  <footer class="bg-[#e1e3e4] border-t border-[#c0c9c3] mt-auto">
+  <footer class="bg-surface-container-highest border-t border-outline-variant mt-auto">
     <div
-      class="w-full py-6 px-4 md:px-8 max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#404945]"
+      class="w-full py-6 px-4 md:px-8 max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-variant"
     >
-      <div class="flex items-center gap-2 font-bold text-[#003629]">
+      <div class="flex items-center gap-2 font-bold text-primary">
         <span>SGAC</span>
       </div>
-      <p class="text-center">
+      <p class="text-primaryenter">
         © 2026 SGAC - Universidade Federal do Agreste de Pernambuco. Todos os direitos reservados.
       </p>
     </div>

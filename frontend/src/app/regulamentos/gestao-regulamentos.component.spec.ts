@@ -47,7 +47,7 @@ describe('GestaoRegulamentosComponent', () => {
   it('deve criar o componente e carregar as normas ativas', () => {
     expect(component).toBeTruthy();
     expect(serviceSpy.listarRegulamentos).toHaveBeenCalled();
-    expect(component.regrasAtivas().length).toBe(1);
+    expect(component.regrasAtivas()).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('Art. 12');
   });
 

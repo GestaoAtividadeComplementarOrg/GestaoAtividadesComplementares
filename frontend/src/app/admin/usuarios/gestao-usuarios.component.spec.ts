@@ -47,7 +47,7 @@ describe('GestaoUsuariosComponent', () => {
   it('deve carregar e listar os usuarios cadastrados', () => {
     expect(component).toBeTruthy();
     expect(adminServiceSpy.listarUsuarios).toHaveBeenCalled();
-    expect(component.usuarios().length).toBe(1);
+    expect(component.usuarios()).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('Docente Avaliador');
   });
 

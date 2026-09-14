@@ -39,8 +39,12 @@ export class ListagemAtividadesComponent implements OnInit {
 
   readonly filtroNatureza = signal<Natureza | ''>('');
   readonly filtroCategoria = signal<Categoria | ''>('');
+  readonly filtroTexto = signal<string>('');
   readonly temFiltroAtivo = computed<boolean>(
-    () => this.filtroNatureza() !== '' || this.filtroCategoria() !== '',
+    () =>
+      this.filtroNatureza() !== '' ||
+      this.filtroCategoria() !== '' ||
+      this.filtroTexto().trim() !== '',
   );
 
   readonly atividadeParaExcluir = signal<Atividade | null>(null);
@@ -87,7 +91,17 @@ export class ListagemAtividadesComponent implements OnInit {
 
     this.atividadeService.listar(filtro).subscribe({
       next: (atividades) => {
-        this.atividades.set(atividades);
+        let resultado = atividades;
+        const texto = this.filtroTexto().trim().toLowerCase();
+        if (texto) {
+          resultado = resultado.filter(
+            (a) =>
+              a.titulo.toLowerCase().includes(texto) ||
+              a.instituicaoResponsavel?.toLowerCase().includes(texto) ||
+              false,
+          );
+        }
+        this.atividades.set(resultado);
         this.carregando.set(false);
       },
       error: (erro: Error) => {
@@ -109,9 +123,16 @@ export class ListagemAtividadesComponent implements OnInit {
     this.buscarAtividades();
   }
 
+  aoAlterarTexto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.filtroTexto.set(input.value);
+    this.buscarAtividades();
+  }
+
   limparFiltros(): void {
     this.filtroNatureza.set('');
     this.filtroCategoria.set('');
+    this.filtroTexto.set('');
     this.buscarAtividades();
   }
 

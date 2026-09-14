@@ -37,11 +37,11 @@
 
 @if (confirmacaoAberta()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 print:hidden">
-    <div
-      role="dialog"
+    <dialog
       aria-modal="true"
       aria-labelledby="titulo-confirmacao-submissao"
       class="bg-white rounded-xl border border-[#e1e3e4] p-5 w-full max-w-md shadow-lg"
+      open
     >
       <h2 id="titulo-confirmacao-submissao" class="text-base font-bold text-[#191c1d] mb-2">
         Enviar relatório para validação
@@ -73,6 +73,6 @@
           }
         </button>
       </div>
-    </div>
+    </dialog>
   </div>
 }

@@ -1,15 +1,14 @@
 package br.edu.ufape.backend.autenticacao.service;
 
-import java.security.Key;
 import java.time.Instant;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
@@ -34,18 +33,20 @@ public class JwtService {
 		return buildToken(claims, subject);
 	}
 
+	@SuppressWarnings("java:S2143") // Requerido pela API do JJWT: issuedAt/expiration usam java.util.Date
 	private String buildToken(Map<String, Object> claims, String subject) {
 		Instant now = Instant.now();
 		Instant expiryDate = now.plusMillis(jwtExpirationMs);
-		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(Date.from(now))
-				.setExpiration(Date.from(expiryDate)).signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
+
+		return Jwts.builder().claims(claims).subject(subject).issuedAt(java.util.Date.from(now))
+				.expiration(java.util.Date.from(expiryDate)).signWith(getSigningKey(), Jwts.SIG.HS256).compact();
 	}
 
 	public boolean isTokenValid(String token) {
 		try {
 			extractAllClaims(token);
 			return true;
-		} catch (Exception ex) {
+		} catch (JwtException ex) {
 			return false;
 		}
 	}
@@ -55,10 +56,10 @@ public class JwtService {
 	}
 
 	private Claims extractAllClaims(String token) {
-		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+		return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
 	}
 
-	private Key getSigningKey() {
+	private SecretKey getSigningKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}

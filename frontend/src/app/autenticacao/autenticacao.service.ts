@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { API_BASE_URL } from '../api.config';
 import { Credenciais, LoginResponse, Role } from './autenticacao.model';
@@ -15,6 +15,7 @@ const CHAVE_TIPO_TOKEN = 'sgac_token_tipo';
 export class AutenticacaoService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${API_BASE_URL}/auth`;
+  private readonly authState = new BehaviorSubject<boolean>(this.getToken() !== null);
 
   cadastrar(request: RegistroRequest): Observable<RegistroResponse> {
     return this.http
@@ -44,6 +45,7 @@ export class AutenticacaoService {
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       localStorage.setItem(CHAVE_TOKEN, token);
       localStorage.setItem(CHAVE_TIPO_TOKEN, tipo);
+      this.authState.next(true);
     }
   }
 
@@ -88,6 +90,10 @@ export class AutenticacaoService {
     return this.getToken() !== null;
   }
 
+  get authObservable(): Observable<boolean> {
+    return this.authState.asObservable();
+  }
+
   estaAutenticado(): boolean {
     return this.isAuthenticated();
   }
@@ -101,6 +107,7 @@ export class AutenticacaoService {
         sessionStorage.clear();
       }
     }
+    this.authState.next(false);
   }
 
   private traduzirErroCadastro(error: HttpErrorResponse): string {

@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { BannerErroComponent } from '../../core/components/banner-erro/banner-erro.component';
+import { SuccessToastComponent } from '../../core/components/success-toast/success-toast.component';
+import { FileDropzoneComponent } from '../../core/components/file-dropzone/file-dropzone.component';
+import { FormErrorComponent } from '../../core/components/form-error/form-error.component';
+
 import { AtividadeService } from '../atividade.service';
 import { AtividadeRequest } from '../atividade.model';
 
@@ -13,7 +18,15 @@ const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
 @Component({
   selector: 'app-cadastro-atividade',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    BannerErroComponent,
+    SuccessToastComponent,
+    FileDropzoneComponent,
+    FormErrorComponent,
+  ],
   templateUrl: './cadastro-atividade.component.html',
 })
 export class CadastroAtividadeComponent {
@@ -180,10 +193,16 @@ export class CadastroAtividadeComponent {
     this.erroExtracao.set(null);
 
     // ----------------------------------------------------------
-    // Tipo
+    // Tipo (aceita MIME vazio ou octet-stream se extensão bater)
     // ----------------------------------------------------------
 
-    if (!FORMATOS_PERMITIDOS.has(file.type)) {
+    const extensaoValida = /\.(pdf|png|jpe?g)$/i.test(file.name);
+    const tipoValido =
+      FORMATOS_PERMITIDOS.has(file.type) ||
+      file.type === '' ||
+      file.type === 'application/octet-stream';
+
+    if (!tipoValido || !extensaoValida) {
       this.arquivoAnexado.set(null);
 
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');

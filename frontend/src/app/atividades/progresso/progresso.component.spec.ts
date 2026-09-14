@@ -109,7 +109,7 @@ describe('ProgressoComponent', () => {
     const texto = fixture.nativeElement.textContent as string;
     const cards = fixture.nativeElement.querySelectorAll('[role="progressbar"]');
     expect(fixture.componentInstance.semAtividades()).toBeTruthy();
-    expect(cards.length).toBe(2);
+    expect(cards).toHaveLength(2);
     expect(texto).toContain('0h');
     expect(texto).toContain('0% concluído');
   });

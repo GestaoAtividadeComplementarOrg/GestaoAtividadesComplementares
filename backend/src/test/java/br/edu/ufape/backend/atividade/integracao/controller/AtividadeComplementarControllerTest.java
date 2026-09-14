@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
 import br.edu.ufape.backend.solicitacao.contrato.SolicitacaoContrato;
 
 import java.time.LocalDate;
@@ -342,7 +342,7 @@ class AtividadeComplementarControllerTest {
 		String token = cadastrarEstudanteERetornarToken("conflito.delete@ufape.edu.br");
 		Long id = cadastrarAtividadeERetornarId(token, "Atividade Bloqueada para Delete");
 
-		Mockito.when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(id)).thenReturn(true);
+		when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(id)).thenReturn(true);
 
 		mockMvc.perform(delete(URL_CADASTRO + "/{id}", id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isConflict())
@@ -355,7 +355,7 @@ class AtividadeComplementarControllerTest {
 		String token = cadastrarEstudanteERetornarToken("conflito.put@ufape.edu.br");
 		Long id = cadastrarAtividadeERetornarId(token, "Atividade Bloqueada para Edit");
 
-		Mockito.when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(id)).thenReturn(true);
+		when(solicitacaoContrato.existeSolicitacaoEmAbertoComAtividade(id)).thenReturn(true);
 
 		MockMultipartFile arquivo = new MockMultipartFile("arquivo", "certificado.pdf", "application/pdf",
 				"PDF-DUMMY".getBytes());

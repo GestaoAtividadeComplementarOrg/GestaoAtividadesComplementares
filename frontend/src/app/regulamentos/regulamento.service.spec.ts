@@ -45,7 +45,7 @@ describe('RegulamentoService', () => {
 
     const req = httpMock.expectOne(`${REGULAMENTOS_URL}/ingerir?substituirExistentes=true`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body instanceof FormData).toBe(true);
+    expect(req.request.body).toBeInstanceOf(FormData);
     req.flush(mockResponse);
   });
 

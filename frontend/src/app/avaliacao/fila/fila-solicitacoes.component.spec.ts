@@ -56,7 +56,7 @@ describe('FilaSolicitacoesComponent', () => {
     expect(texto).toContain('Carlos Eduardo');
     expect(texto).toContain('Juliana Ferreira');
     expect(texto).toContain('40h totais');
-    expect(fixture.componentInstance.solicitacoes().length).toBe(2);
+    expect(fixture.componentInstance.solicitacoes()).toHaveLength(2);
   });
 
   it('deve exibir carregamento inicial', () => {
