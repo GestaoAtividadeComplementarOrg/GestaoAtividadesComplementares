@@ -499,11 +499,7 @@
             </div>
           } @else if (urlPrevia()) {
             @if (tipoPrevia() === 'pdf') {
-              <iframe
-                [src]="urlPrevia()"
-                class="w-full h-full rounded-lg border border-outline-variant bg-white shadow-inner"
-                title="Pré-visualização do Documento PDF"
-              ></iframe>
+              <app-pdf-preview [url]="urlPrevia() || ''" />
             } @else {
               <img
                 [src]="urlPrevia()"

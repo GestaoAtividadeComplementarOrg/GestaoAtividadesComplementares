@@ -97,7 +97,8 @@ export class ListagemAtividadesComponent implements OnInit {
           resultado = resultado.filter(
             (a) =>
               a.titulo.toLowerCase().includes(texto) ||
-              (a.instituicaoResponsavel?.toLowerCase().includes(texto) || false),
+              a.instituicaoResponsavel?.toLowerCase().includes(texto) ||
+              false,
           );
         }
         this.atividades.set(resultado);
