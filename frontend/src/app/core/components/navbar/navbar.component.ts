@@ -18,9 +18,6 @@ export class NavbarComponent implements OnDestroy {
   readonly themeService = inject(ThemeService);
   private readonly authSub: Subscription;
 
-  constructor() {
-    this.authSub = this.authService.authObservable.subscribe((auth) => {
-
   readonly estaAutenticado = signal<boolean>(this.authService.isAuthenticated());
   readonly perfil = signal<Role | null>(this.authService.perfilAtual());
 
