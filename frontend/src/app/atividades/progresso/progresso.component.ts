@@ -5,16 +5,21 @@ import { ProgressoCargaHoraria } from './progresso.model';
 import { ProgressoService } from './progresso.service';
 import { ProgressoCardComponent } from './progresso-card.component';
 import { FooterComponent } from '../../core/components/footer/footer.component';
-import {
-  ResumoModalidade,
-  calcularResumos,
-  calcularSemAtividades,
-} from './progresso-shared';
+import { LoadingSpinnerComponent } from '../../core/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../core/components/empty-state/empty-state.component';
+import { ResumoModalidade, calcularResumos, calcularSemAtividades } from './progresso-shared';
 
 @Component({
   selector: 'app-progresso',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProgressoCardComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ProgressoCardComponent,
+    FooterComponent,
+    LoadingSpinnerComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './progresso.component.html',
 })
 export class ProgressoComponent implements OnInit {

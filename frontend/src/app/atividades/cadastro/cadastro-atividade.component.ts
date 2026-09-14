@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { BannerErroComponent } from '../../core/components/banner-erro/banner-erro.component';
+import { SuccessToastComponent } from '../../core/components/success-toast/success-toast.component';
+import { FileDropzoneComponent } from '../../core/components/file-dropzone/file-dropzone.component';
+import { FormErrorComponent } from '../../core/components/form-error/form-error.component';
+
 import { AtividadeService } from '../atividade.service';
 import { AtividadeRequest } from '../atividade.model';
 
@@ -13,7 +18,15 @@ const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
 @Component({
   selector: 'app-cadastro-atividade',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    BannerErroComponent,
+    SuccessToastComponent,
+    FileDropzoneComponent,
+    FormErrorComponent,
+  ],
   templateUrl: './cadastro-atividade.component.html',
 })
 export class CadastroAtividadeComponent {

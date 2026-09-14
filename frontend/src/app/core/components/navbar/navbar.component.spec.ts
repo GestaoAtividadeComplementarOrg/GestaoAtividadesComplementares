@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { NavbarComponent } from './navbar.component';
 import { AutenticacaoService } from '../../../autenticacao/autenticacao.service';
 

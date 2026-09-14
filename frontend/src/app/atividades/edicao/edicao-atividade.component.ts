@@ -2,6 +2,10 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { BannerErroComponent } from '../../core/components/banner-erro/banner-erro.component';
+import { SuccessToastComponent } from '../../core/components/success-toast/success-toast.component';
+import { FileDropzoneComponent } from '../../core/components/file-dropzone/file-dropzone.component';
+
 import { AtividadeService } from '../atividade.service';
 import { AtividadeEdicaoRequest } from './edicao-atividade.model';
 import { Atividade } from '../atividade.model';
@@ -12,7 +16,14 @@ const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024; // 5MB
 @Component({
   selector: 'app-edicao-atividade',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    BannerErroComponent,
+    SuccessToastComponent,
+    FileDropzoneComponent,
+  ],
   templateUrl: './edicao-atividade.component.html',
 })
 export class EdicaoAtividadeComponent implements OnInit, OnDestroy {

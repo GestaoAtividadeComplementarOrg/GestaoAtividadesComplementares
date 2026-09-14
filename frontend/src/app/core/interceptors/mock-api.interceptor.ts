@@ -99,6 +99,7 @@ function handleAtividadesMocks(
   method: string,
 ): Observable<HttpResponse<unknown>> | null {
   if (!url.includes('/atividades')) return null;
+  if (url.includes('/relatorios')) return null;
 
   if (url.endsWith('/atividades/progresso') && method === 'GET') {
     return jsonResponse(200, obterProgressoCalculado());
@@ -282,7 +283,7 @@ function handleRotaAvaliacao(
   req: HttpRequest<unknown>,
   url: string,
   method: string,
-  idSeg: string | null,
+  _idSeg: string | null,
 ): Observable<HttpResponse<unknown>> | null {
   if (url.endsWith('/solicitacoes/avaliacao') && method === 'GET') {
     return processarSolicitacoesParaAvaliacao(req);
