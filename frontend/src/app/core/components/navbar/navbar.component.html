@@ -5,7 +5,7 @@
         SGAC - UFAPE
       </a>
 
-      @if (estaAutenticado) {
+      @if (estaAutenticado()) {
         <nav class="hidden md:flex items-center gap-4 text-sm font-medium">
           <!-- Links de Estudante -->
           @if (isEstudante) {
@@ -95,13 +95,22 @@
 
     <!-- Ações e Perfil à Direita -->
     <div class="flex items-center gap-3">
-      @if (estaAutenticado) {
+      @if (estaAutenticado()) {
         <app-contador-notificacoes />
+        <button
+          type="button"
+          (click)="themeService.toggle()"
+          class="p-2 text-[#191c1d] hover:text-[#003629] transition-colors"
+          aria-label="Alternar tema"
+          title="Alternar tema"
+        >
+          <span class="material-symbols-outlined">brightness_6</span>
+        </button>
         <span
           data-testid="badge-perfil"
           class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e6efe9] text-[#003629] border border-[#c0c9c3]"
         >
-          {{ perfil }}
+          {{ perfil() }}
         </span>
         <a routerLink="/logout" class="text-sm font-medium text-[#ba1a1a] hover:underline">
           Sair
