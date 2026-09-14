@@ -7,7 +7,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   template: `
     <iframe
       [src]="safeUrl"
-      class="w-full h-full rounded-lg border border-outline-variant bg-white shadow-inner"
+      class="w-full min-h-[70vh] h-full rounded-lg border border-outline-variant bg-white shadow-inner"
       title="Pré-visualização do Documento PDF"
     ></iframe>
   `,
