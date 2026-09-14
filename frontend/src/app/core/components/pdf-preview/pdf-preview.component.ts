@@ -1,24 +1,42 @@
-import { Component, Input, inject } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-pdf-preview',
   standalone: true,
   template: `
     <iframe
-      [src]="safeUrl"
+      [src]="url"
       class="w-full h-full rounded-lg border border-outline-variant bg-white shadow-inner"
       title="Pré-visualização do Documento PDF"
     ></iframe>
   `,
 })
 export class PdfPreviewComponent {
-  @Input() url!: string;
-  private readonly sanitizer = inject(DomSanitizer);
+  private _url = '';
 
-  get safeUrl(): SafeResourceUrl {
-    // Segurança: a URL é um blob: criado localmente pelo browser (URL.createObjectURL)
-    // a partir de arquivo selecionado pelo usuário. Não provém de fonte externa.
-    return this.sanitizer.bypassSecurityTrustResourceUrl(this.url);
+  @Input()
+  set url(value: string) {
+    this._url = this.isValidPdfUrl(value) ? value : '';
+  }
+
+  get url(): string {
+    return this._url;
+  }
+
+  private isValidPdfUrl(value: string): boolean {
+    if (!value) {
+      return false;
+    }
+
+    try {
+      const parsed = new URL(value);
+
+      return (
+        parsed.protocol === 'blob:' &&
+        parsed.origin === window.location.origin
+      );
+    } catch {
+      return false;
+    }
   }
 }
