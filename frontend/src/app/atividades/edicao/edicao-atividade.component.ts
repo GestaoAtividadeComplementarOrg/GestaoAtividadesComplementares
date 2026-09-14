@@ -299,7 +299,10 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
     this.erroArquivo.set(null);
     this.erroExtracao.set(null);
 
-    if (!FORMATOS_PERMITIDOS.has(file.type)) {
+    const extensaoValida = /\.(pdf|png|jpe?g)$/i.test(file.name);
+    const tipoValido = FORMATOS_PERMITIDOS.has(file.type) || file.type === '' || file.type === 'application/octet-stream';
+
+    if (!tipoValido || !extensaoValida) {
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');
       this.arquivoAnexado.set(null);
       return false;

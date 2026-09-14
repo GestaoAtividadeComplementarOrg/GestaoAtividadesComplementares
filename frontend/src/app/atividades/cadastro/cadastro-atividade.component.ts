@@ -193,10 +193,13 @@ export class CadastroAtividadeComponent {
     this.erroExtracao.set(null);
 
     // ----------------------------------------------------------
-    // Tipo
+    // Tipo (aceita MIME vazio ou octet-stream se extensão bater)
     // ----------------------------------------------------------
 
-    if (!FORMATOS_PERMITIDOS.has(file.type)) {
+    const extensaoValida = /\.(pdf|png|jpe?g)$/i.test(file.name);
+    const tipoValido = FORMATOS_PERMITIDOS.has(file.type) || file.type === '' || file.type === 'application/octet-stream';
+
+    if (!tipoValido || !extensaoValida) {
       this.arquivoAnexado.set(null);
 
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');
