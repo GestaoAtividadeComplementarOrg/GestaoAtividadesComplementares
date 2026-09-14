@@ -3,136 +3,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Design System: Light (default) + Dark Mode (.dark-mode)
+ * Baseado no HTML de referência passado pelo usuário.
+ */
+
+/* ===== BASE (Light) ===== */
 @layer utilities {
-  .bg-surface {
-    background-color: #f8f9fa;
-  }
+  /* Backgrounds */
+  .bg-surface { background-color: #f8f9fa; }
+  .bg-surface-container-lowest { background-color: #ffffff; }
+  .bg-surface-container-low { background-color: #f3f4f5; }
+  .bg-surface-container { background-color: #edeeef; }
+  .bg-surface-container-highest { background-color: #e1e3e4; }
+  .bg-primary { background-color: #003629; }
+  .bg-primary-container { background-color: #1b4d3e; }
+  .bg-error-container { background-color: #ffdad6; }
 
-  .bg-surface-container-lowest {
-    background-color: #ffffff;
-  }
+  /* Text */
+  .text-primary { color: #003629; }
+  .text-primary-container { color: #1b4d3e; }
+  .text-on-primary-container { color: #ffffff; }
+  .text-on-surface { color: #191c1d; }
+  .text-on-surface-variant { color: #404945; }
+  .text-secondary { color: #4e5e81; }
+  .text-error { color: #ba1a1a; }
+  .text-on-error-container { color: #93000a; }
 
-  .bg-surface-container-low {
-    background-color: #f3f4f5;
-  }
-
-  .bg-surface-container {
-    background-color: #edeeef;
-  }
-
-  .bg-surface-container-highest {
-    background-color: #e1e3e4;
-  }
-
-  .bg-primary {
-    background-color: #003629;
-  }
-
-  .bg-primary-container {
-    background-color: #1b4d3e;
-  }
-
-  .bg-error-container {
-    background-color: #ffdad6;
-  }
-
-  .text-primary {
-    color: #003629;
-  }
-
-  .text-primary-container {
-    color: #1b4d3e;
-  }
-
-  .text-on-primary-container {
-    color: #ffffff;
-  }
-
-  .text-on-surface {
-    color: #191c1d;
-  }
-
-  .text-on-surface-variant {
-    color: #404945;
-  }
-
-  .text-secondary {
-    color: #4e5e81;
-  }
-
-  .text-error {
-    color: #ba1a1a;
-  }
-
-  .text-on-error-container {
-    color: #93000a;
-  }
-
-  .border-outline {
-    border-color: #707974;
-  }
-
-  .border-outline-variant {
-    border-color: #c0c9c3;
-  }
-
-  .border-surface-variant {
-    border-color: #e1e3e4;
-  }
-
-  .border-primary-container {
-    border-color: #1b4d3e;
-  }
-
-  .border-error {
-    border-color: #ba1a1a;
-  }
+  /* Borders */
+  .border-outline { border-color: #707974; }
+  .border-outline-variant { border-color: #c0c9c3; }
+  .border-surface-variant { border-color: #e1e3e4; }
+  .border-primary-container { border-color: #1b4d3e; }
+  .border-error { border-color: #ba1a1a; }
 
   /* Tipografia */
   .font-headline-lg {
-    font-size: 32px;
-    line-height: 40px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.01em;
   }
-
   .font-headline-lg-mobile {
-    font-size: 24px;
-    line-height: 32px;
-    font-weight: 600;
+    font-size: 24px; line-height: 32px; font-weight: 600;
   }
-
   .font-title-md {
-    font-size: 20px;
-    line-height: 28px;
-    font-weight: 600;
+    font-size: 20px; line-height: 28px; font-weight: 600;
   }
-
   .font-body-md {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 400;
+    font-size: 14px; line-height: 20px; font-weight: 400;
   }
-
   .font-label-sm {
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.05em;
   }
 
-  /* Espaçamentos e Container */
-  .px-margin-desktop {
-    padding-left: 32px;
-    padding-right: 32px;
-  }
+  /* Spacing */
+  .px-margin-desktop { padding-left: 32px; padding-right: 32px; }
+  .px-margin-mobile { padding-left: 16px; padding-right: 16px; }
+  .max-w-container-max { max-width: 1280px; }
+}
 
-  .px-margin-mobile {
-    padding-left: 16px;
-    padding-right: 16px;
+/* ===== INPUT CENTRALIZADO ===== */
+@layer components {
+  .input-field {
+    width: 100%;
+    background-color: #ffffff;
+    border-color: #c0c9c3;
+    color: #191c1d;
+    font-size: 14px; line-height: 20px;
+    border-radius: 0.5rem;
+    padding-left: 1rem; padding-right: 1rem; padding-top: 0.75rem; padding-bottom: 0.75rem;
+    outline: none; transition: all;
   }
-
-  .max-w-container-max {
-    max-width: 1280px;
+  .input-field:focus {
+    outline-style: solid; outline-width: 2px; outline-color: rgba(27, 77, 62, 0.5);
+    border-color: #1b4d3e;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+.dark-mode {
+  background-color: #0b1326;
+  color: #f8fafc;
+}
+.dark-mode.bg-background {
+  background-color: #0b1326 !important;
+}
+.dark-mode.text-on-surface {
+  color: #f8fafc !important;
+}
+.dark-mode header,
+.dark-mode .bg-white {
+  background-color: #171f33 !important;
+  border-color: #2c3b57 !important;
+}
+.dark-mode .bg-surface { background-color: #0b1326 !important; }
+.dark-mode .bg-surface-container-lowest { background-color: #0b1326 !important; }
+.dark-mode .bg-surface-container-low { background-color: #131b2e !important; }
+.dark-mode .bg-surface-container { background-color: #171f33 !important; }
+.dark-mode .bg-surface-container-highest { background-color: #2d3449 !important; }
+.dark-mode .bg-primary { background-color: #51deac !important; }
+.dark-mode .bg-primary-container { background-color: #006c4e !important; }
+.dark-mode .text-primary { color: #51deac !important; }
+.dark-mode .text-on-surface { color: #f8fafc !important; }
+.dark-mode .text-on-surface-variant { color: #94a3b8 !important; }
+.dark-mode .text-secondary { color: #7bd0ff !important; }
+.dark-mode .text-error { color: #ffb4ab !important; }
+.dark-mode .text-on-error-container { color: #ffdad6 !important; }
+.dark-mode .border-outline { border-color: #334155 !important; }
+.dark-mode .border-outline-variant { border-color: #2c3b57 !important; }
+.dark-mode .border-surface-variant { border-color: #1e293b !important; }
+.dark-mode .border-primary-container { border-color: #006c4e !important; }
+.dark-mode .border-error { border-color: #ffb4ab !important; }
+
+.dark-mode .input-field {
+  background-color: #0b1326 !important;
+  border-color: #2c3b57 !important;
+  color: #f8fafc !important;
+}
+.dark-mode .input-field:focus {
+  border-color: #51deac !important;
+  outline-color: rgba(81, 222, 183, 0.4) !important;
+}
+
+
