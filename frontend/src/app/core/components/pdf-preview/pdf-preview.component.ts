@@ -8,7 +8,6 @@ import {
   OnDestroy,
   SimpleChanges,
   ViewChild,
-  inject,
 } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
 
