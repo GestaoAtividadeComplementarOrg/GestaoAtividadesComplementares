@@ -17,6 +17,8 @@ export class PdfPreviewComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   get safeUrl(): SafeResourceUrl {
+    // Segurança: a URL é um blob: criado localmente pelo browser (URL.createObjectURL)
+    // a partir de um arquivo selecionado pelo usuário. Não provém de fonte externa.
     return this.sanitizer.bypassSecurityTrustResourceUrl(this.url);
   }
 }
