@@ -197,7 +197,10 @@ export class CadastroAtividadeComponent {
     // ----------------------------------------------------------
 
     const extensaoValida = /\.(pdf|png|jpe?g)$/i.test(file.name);
-    const tipoValido = FORMATOS_PERMITIDOS.has(file.type) || file.type === '' || file.type === 'application/octet-stream';
+    const tipoValido =
+      FORMATOS_PERMITIDOS.has(file.type) ||
+      file.type === '' ||
+      file.type === 'application/octet-stream';
 
     if (!tipoValido || !extensaoValida) {
       this.arquivoAnexado.set(null);

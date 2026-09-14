@@ -221,6 +221,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         this.urlObjetoCriada = url;
+        // #security-safe: URL criada localmente a partir de blob gerado pelo browser com arquivo do usuário
         this.urlPrevia.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
         this.tipoPrevia.set(blob.type.includes('image') ? 'imagem' : 'pdf');
         this.carregandoPrevia.set(false);
@@ -239,6 +240,7 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
     this.erroPrevia.set(null);
     const url = URL.createObjectURL(file);
     this.urlObjetoCriada = url;
+    // #security-safe: URL criada localmente a partir de blob gerado pelo browser com arquivo do usuário
     this.urlPrevia.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
     this.tipoPrevia.set(file.type.includes('image') ? 'imagem' : 'pdf');
     this.tituloPrevia.set(file.name);
@@ -302,7 +304,10 @@ export class EdicaoAtividadeComponent implements OnInit, OnDestroy {
     this.erroExtracao.set(null);
 
     const extensaoValida = /\.(pdf|png|jpe?g)$/i.test(file.name);
-    const tipoValido = FORMATOS_PERMITIDOS.has(file.type) || file.type === '' || file.type === 'application/octet-stream';
+    const tipoValido =
+      FORMATOS_PERMITIDOS.has(file.type) ||
+      file.type === '' ||
+      file.type === 'application/octet-stream';
 
     if (!tipoValido || !extensaoValida) {
       this.erroArquivo.set('Tipo de arquivo inválido. Apenas PDF, PNG ou JPEG são permitidos.');
