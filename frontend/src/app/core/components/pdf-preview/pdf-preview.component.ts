@@ -5,11 +5,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   selector: 'app-pdf-preview',
   standalone: true,
   template: `
-    <iframe
-      [src]="safeUrl"
-      class="w-full min-h-[70vh] h-full rounded-lg border border-outline-variant bg-white shadow-inner"
-      title="Pré-visualização do Documento PDF"
-    ></iframe>
+    <div class="w-full min-h-[75vh] h-full">
+      <iframe
+        [src]="safeUrl"
+        class="w-full h-full rounded-lg border border-outline-variant bg-white shadow-inner"
+        title="Pré-visualização do Documento PDF"
+      ></iframe>
+    </div>
   `,
 })
 export class PdfPreviewComponent {

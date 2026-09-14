@@ -499,7 +499,7 @@
             </div>
           } @else if (urlPrevia()) {
             @if (tipoPrevia() === 'pdf') {
-              <app-pdf-preview [url]="urlPrevia() || ''" />
+              <app-pdf-preview [url]="urlPrevia() || ''" class="block w-full h-full" />
             } @else {
               <img
                 [src]="urlPrevia()"
