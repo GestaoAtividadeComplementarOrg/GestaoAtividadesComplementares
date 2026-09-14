@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { NavbarComponent } from './navbar.component';
 import { AutenticacaoService } from '../../../autenticacao/autenticacao.service';
@@ -14,15 +15,18 @@ describe('NavbarComponent', () => {
     perfilAtual: ReturnType<typeof signal>;
     isAuthenticated: ReturnType<typeof vi.fn>;
     encerrarSessao: ReturnType<typeof vi.fn>;
+    authObservable: BehaviorSubject<boolean>;
   };
 
   const montar = (perfil: string | null) => {
     TestBed.resetTestingModule();
 
+    const isAuth = perfil !== null;
     authServiceMock = {
       perfilAtual: signal<string | null>(perfil),
-      isAuthenticated: vi.fn().mockReturnValue(perfil !== null),
+      isAuthenticated: vi.fn().mockReturnValue(isAuth),
       encerrarSessao: vi.fn(),
+      authObservable: new BehaviorSubject<boolean>(isAuth),
     };
 
     TestBed.configureTestingModule({
