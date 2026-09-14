@@ -16,7 +16,10 @@ import { ThemeService } from '../../services/theme.service';
 export class NavbarComponent implements OnDestroy {
   private readonly authService = inject(AutenticacaoService);
   readonly themeService = inject(ThemeService);
-  private authSub!: Subscription;
+  private readonly authSub: Subscription;
+
+  constructor() {
+    this.authSub = this.authService.authObservable.subscribe((auth) => {
 
   readonly estaAutenticado = signal<boolean>(this.authService.isAuthenticated());
   readonly perfil = signal<Role | null>(this.authService.perfilAtual());
