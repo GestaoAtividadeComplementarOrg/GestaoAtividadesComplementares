@@ -35,6 +35,7 @@ public class GroqRagService {
 	private static final String MESSAGES = "messages";
 	private static final String CONTENT = "content";
 	private static final String TEMPERATURE = "temperature";
+	private static final String MAX_TOKENS = "max_tokens";
 
 	@Value("${groq.api.key:}")
 	private String apiKey;
@@ -89,7 +90,7 @@ public class GroqRagService {
 		Map<String, Object> requestBody = Map.of(MODEL, MODEL_GROQ, MESSAGES,
 				List.of(Map.of("role", "system", CONTENT, systemPromptDinamico),
 						Map.of("role", "user", CONTENT, userContent)),
-				TEMPERATURE, 0.1);
+				TEMPERATURE, 0.1, MAX_TOKENS, 800);
 		try {
 			return executarChamadaGroq(requestBody, natureza, categoria, cargaHoraria);
 		} catch (Exception e) {
@@ -120,7 +121,7 @@ public class GroqRagService {
 		Map<String, Object> requestBody = Map.of(MODEL, MODEL_GROQ, MESSAGES,
 				List.of(Map.of("role", "system", CONTENT, prompt),
 						Map.of("role", "user", CONTENT, "Texto do Certificado:\n" + textoCertificado)),
-				TEMPERATURE, 0.1);
+				TEMPERATURE, 0.1, MAX_TOKENS, 600);
 		return processarExtracao(requestBody);
 	}
 
@@ -145,7 +146,8 @@ public class GroqRagService {
 		Map<String, Object> userMessage = Map.of("role", "user", CONTENT,
 				List.of(Map.of("type", "text", "text", prompt),
 						Map.of("type", "image_url", "image_url", Map.of("url", dataUri))));
-		Map<String, Object> requestBody = Map.of(MODEL, MODEL_GROQ, MESSAGES, List.of(userMessage), TEMPERATURE, 0.1);
+		Map<String, Object> requestBody = Map.of(MODEL, MODEL_GROQ, MESSAGES, List.of(userMessage), TEMPERATURE, 0.1,
+				MAX_TOKENS, 600);
 		return processarExtracao(requestBody);
 	}
 

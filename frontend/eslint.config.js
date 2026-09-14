@@ -10,7 +10,8 @@ export default tseslint.config(
             "dist/**",
             ".angular/**",
             "node_modules/**",
-            "vite.config.ts"
+            "vite.config.ts",
+            "public/assets/pdf-js/**"
         ]
     },
     {

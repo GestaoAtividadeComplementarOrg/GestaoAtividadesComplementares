@@ -3,6 +3,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FooterComponent } from '../core/components/footer/footer.component';
+import { LoadingSpinnerComponent } from '../core/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../core/components/empty-state/empty-state.component';
+import { SummaryCardComponent } from '../core/components/summary-card/summary-card.component';
 import { ProgressoCargaHoraria } from '../atividades/progresso/progresso.model';
 import { ProgressoService } from '../atividades/progresso/progresso.service';
 import {
@@ -15,7 +18,15 @@ import {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, SituacaoSolicitacaoComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    SituacaoSolicitacaoComponent,
+    FooterComponent,
+    LoadingSpinnerComponent,
+    EmptyStateComponent,
+    SummaryCardComponent,
+  ],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {

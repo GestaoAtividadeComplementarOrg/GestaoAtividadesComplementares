@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Component } from '@angular/core';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RegistroComponent } from './registro.component';
@@ -13,14 +13,10 @@ describe('RegistroComponent', () => {
   let component: RegistroComponent;
   let fixture: ComponentFixture<RegistroComponent>;
   let registroServiceMock: { register: ReturnType<typeof vi.fn> };
-  let routerMock: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     registroServiceMock = {
       register: vi.fn(),
-    };
-    routerMock = {
-      navigate: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
