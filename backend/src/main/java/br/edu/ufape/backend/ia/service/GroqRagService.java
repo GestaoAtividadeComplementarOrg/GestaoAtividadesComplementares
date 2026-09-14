@@ -35,7 +35,7 @@ public class GroqRagService {
 	private static final String MESSAGES = "messages";
 	private static final String CONTENT = "content";
 	private static final String TEMPERATURE = "temperature";
-	private static final String MAX_TOKENS = MAX_TOKENS;
+	private static final String MAX_TOKENS = "max_tokens";
 
 	@Value("${groq.api.key:}")
 	private String apiKey;
